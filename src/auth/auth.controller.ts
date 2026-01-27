@@ -15,6 +15,7 @@ import { JwtAuthGuard } from "./jwt.guard";
 import { LinkEmailDto } from "./dto/link-email.dto";
 import { VerifyEmailDto } from "./dto/verify-email.dto";
 import { RequestRecoveryDto } from "./dto/request-recovery.dto";
+import { Throttle } from "@nestjs/throttler";
 
 export class RequestChallengeDto {
   address: string;
@@ -25,6 +26,7 @@ export class VerifySignatureDto {
   signature: string;
 }
 
+@Throttle({ default: { ttl: 60000, limit: 10 } })
 @Controller("auth")
 export class AuthController {
   constructor(

@@ -10,8 +10,10 @@ import {
 import { ComputeService } from "./compute.service";
 import { CreateComputeResultDto } from "./dto/create-compute-result.dto";
 import { ComputeResultResponseDto } from "./dto/compute-result-response.dto";
+import { Throttle } from "@nestjs/throttler";
 
 @Controller("compute")
+@Throttle({ default: { ttl: 60000, limit: 5 } })
 export class ComputeController {
   constructor(private readonly computeService: ComputeService) {}
 
