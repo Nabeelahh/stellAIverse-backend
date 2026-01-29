@@ -11,6 +11,8 @@ import { RecommendationModule } from "./recommendation/recommendation.module";
 import { ComputeModule } from "./compute/compute.module";
 import { User } from "./user/entities/user.entity";
 import { EmailVerification } from "./auth/entities/email-verification.entity";
+import { IndexedEvent } from "./indexer/entities/indexed-event.entity";
+import { IndexerModule } from "./indexer/indexer.module";
 import { SignedPayload } from "./oracle/entities/signed-payload.entity";
 import { SubmissionNonce } from "./oracle/entities/submission-nonce.entity";
 import { ThrottlerModule } from "@nestjs/throttler";
@@ -74,6 +76,7 @@ import { OracleModule } from "./oracle/oracle.module";
     ComputeModule,
     WebSocketModule,
     ObservabilityModule,
+    IndexerModule,
     OracleModule,
   ],
   controllers: [AppController],
