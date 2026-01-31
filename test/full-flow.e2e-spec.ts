@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 const request = require('supertest');
-import { TypeOrmModule, getRepositoryToken } from '@nestjs/typeorm';
+import { getRepositoryToken } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 import { Wallet } from 'ethers';
@@ -52,7 +52,7 @@ class TestSubmitterService {
     await this.payloadRepo.save(payload);
 
     // Insert indexed event (indexer normally picks this up from chain logs)
-    const ev = this.indexedRepo.create({
+    await this.indexedRepo.insert({
       txHash: payload.transactionHash,
       logIndex: 0,
       address: process.env.ORACLE_CONTRACT_ADDRESS || '0x0000000000000000000000000000000000000000',
@@ -62,7 +62,6 @@ class TestSubmitterService {
       data: payload.payloadHash,
       topics: [],
     } as any);
-    await this.indexedRepo.insert(ev);
 
     // Notify websocket subscribers (use a test agent id)
     this.gateway.emitAgentStatusUpdate('test-agent', { status: 'confirmed', payloadId: payloadId });
@@ -76,6 +75,7 @@ describe('Full off-chain → on-chain → index flow (E2E)', () => {
   let jwtToken: string;
   let testWallet: any;
   let userAddress: string;
+  let moduleFixture: TestingModule;
   let indexedRepo: Repository<IndexedEvent>;
   let payloadRepo: Repository<SignedPayload>;
   let socket: Socket;
@@ -85,34 +85,67 @@ describe('Full off-chain → on-chain → index flow (E2E)', () => {
     testWallet = Wallet.createRandom();
     userAddress = testWallet.address;
 
-    const moduleFixture: TestingModule = await Test.createTestingModule({
+    // Minimal in-memory repository implementations
+    const createInMemoryRepo = <T extends { id?: string }>() => {
+      const m = new Map<string, T>();
+      return {
+        async save(item: T) {
+          if (!item.id) {
+            // simple uuid-ish id
+            item.id = `id_${Math.random().toString(36).slice(2, 9)}`;
+          }
+          m.set(item.id, { ...item });
+          return { ...item };
+        },
+        async findOne(opts: any) {
+          if (opts && opts.where && opts.where.id) {
+            return m.get(opts.where.id) || null;
+          }
+          // support other lookup patterns if necessary
+          return null;
+        },
+        async find() {
+          return Array.from(m.values());
+        },
+        async insert(obj: any) {
+          if (!obj.id) obj.id = `id_${Math.random().toString(36).slice(2, 9)}`;
+          m.set(obj.id, { ...obj });
+          return obj;
+        },
+        // helper for test assertions
+        __raw: m,
+      };
+    };
+
+    const signedPayloadRepoMock = createInMemoryRepo<SignedPayload>();
+    const indexedRepoMock = createInMemoryRepo<IndexedEvent>();
+
+    const moduleRef = await Test.createTestingModule({
       imports: [
         ConfigModule.forRoot({ isGlobal: true, envFilePath: '.env.test' }),
-        TypeOrmModule.forRoot({
-          type: 'sqlite',
-          database: ':memory:',
-          entities: [SignedPayload, SubmissionNonce, User, EmailVerification, IndexedEvent],
-          synchronize: true,
-          dropSchema: true,
-        }),
         JwtModule.register({ secret: 'test-secret', signOptions: { expiresIn: '24h' } }),
         OracleModule,
         AuthModule,
-        UserModule,
         ComputeModule,
         WebSocketModule,
         IndexerModule,
       ],
+      providers: [
+        { provide: getRepositoryToken(SignedPayload), useValue: signedPayloadRepoMock },
+        { provide: getRepositoryToken(IndexedEvent), useValue: indexedRepoMock },
+      ],
     })
-      // Provide TestSubmitterService in place of the real SubmitterService
+      // Provide TestSubmitterService which uses the in-memory repositories
       .overrideProvider(SubmitterService)
       .useFactory({
-        factory: (payloadRepoToken: Repository<SignedPayload>, indexedRepoToken: Repository<IndexedEvent>, gateway: AgentEventsGateway) => {
-          return new TestSubmitterService(payloadRepoToken, indexedRepoToken, gateway);
+        factory: (payloadRepo: any, idxRepo: any, gateway: AgentEventsGateway) => {
+          return new TestSubmitterService(payloadRepo, idxRepo, gateway);
         },
         inject: [getRepositoryToken(SignedPayload), getRepositoryToken(IndexedEvent), AgentEventsGateway],
       })
       .compile();
+
+    moduleFixture = moduleRef;
 
     app = moduleFixture.createNestApplication();
     app.useGlobalPipes(new ValidationPipe());
