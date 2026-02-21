@@ -1,9 +1,11 @@
 import { Module } from '@nestjs/common';
 import { BullModule } from '@nestjs/bull';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 import { QueueService } from './queue.service';
 import { ComputeJobProcessor } from './compute-job.processor';
 import { QueueHealthIndicator } from './compute-job-healt.indicators';
+import { CacheModule } from '../cache/cache.module';
 
 @Module({
   imports: [
@@ -53,8 +55,10 @@ import { QueueHealthIndicator } from './compute-job-healt.indicators';
         },
       },
     ),
+    CacheModule,
+    EventEmitterModule.forRoot(),
   ],
   providers: [QueueService, ComputeJobProcessor, QueueHealthIndicator],
-  exports: [QueueService, BullModule],
+  exports: [QueueService, BullModule, CacheModule],
 })
 export class QueueModule {}

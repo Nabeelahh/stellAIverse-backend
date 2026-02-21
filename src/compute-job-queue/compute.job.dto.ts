@@ -1,5 +1,7 @@
-import { IsString, IsOptional, IsObject, IsNumber, Min, IsEnum } from 'class-validator';
+import { IsString, IsOptional, IsObject, IsNumber, Min, IsEnum, IsBoolean, ValidateNested } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
+import { CacheConfigDto } from '../cache/dto/cache-config.dto';
 
 export enum JobType {
   DATA_PROCESSING = 'data-processing',
@@ -40,6 +42,23 @@ export class CreateJobDto {
   @IsOptional()
   @IsObject()
   metadata?: Record<string, any>;
+
+  @ApiPropertyOptional({
+    description: 'Cache configuration for this job',
+    type: () => CacheConfigDto,
+  })
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => CacheConfigDto)
+  cacheConfig?: CacheConfigDto;
+
+  @ApiPropertyOptional({
+    description: 'Provider ID for content-addressable caching',
+    example: 'openai-gpt4',
+  })
+  @IsOptional()
+  @IsString()
+  providerId?: string;
 }
 
 export class CreateDelayedJobDto extends CreateJobDto {
