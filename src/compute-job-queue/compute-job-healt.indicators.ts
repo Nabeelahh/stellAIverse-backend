@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { HealthIndicator, HealthIndicatorResult, HealthCheckError } from '@nestjs/terminus';
-import { QueueService } from '../queue.service';
+import { QueueService } from './queue.service';
 
 @Injectable()
 export class QueueHealthIndicator extends HealthIndicator {
