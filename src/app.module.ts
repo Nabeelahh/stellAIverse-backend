@@ -1,5 +1,5 @@
 import { Module } from "@nestjs/common";
-import { ConfigModule } from "@nestjs/config";
+import { ConfigModule, ConfigService } from "@nestjs/config";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { AppController } from "./app.controller";
 import { AppService } from "./app.service";
@@ -21,6 +21,7 @@ import { ThrottlerUserIpGuard } from "./common/guard/throttler.guard";
 import { WebSocketModule } from "./websocket/websocket.module";
 import { ObservabilityModule } from "./observability/observability.module";
 import { OracleModule } from "./oracle/oracle.module";
+import { HealthModule } from "./health/health.module";
 
 @Module({
   imports: [
@@ -78,6 +79,7 @@ import { OracleModule } from "./oracle/oracle.module";
     ObservabilityModule,
     IndexerModule,
     OracleModule,
+    HealthModule,
   ],
   controllers: [AppController],
   providers: [
