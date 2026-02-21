@@ -1,14 +1,20 @@
 import { Process, Processor, OnQueueFailed, OnQueueCompleted } from '@nestjs/bull';
-import { Logger } from '@nestjs/common';
+import { Logger, Inject, Optional } from '@nestjs/common';
 import { Job } from 'bull';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { ComputeJobData, JobResult, QueueService } from '../queue.service';
+import { CacheJobPlugin } from '../cache/plugins/cache-job.plugin';
 
 @Processor('compute-jobs')
 export class ComputeJobProcessor {
   private readonly logger = new Logger(ComputeJobProcessor.name);
   private readonly MAX_RETRIES = 3;
 
-  constructor(private readonly queueService: QueueService) {}
+  constructor(
+    private readonly queueService: QueueService,
+    @Optional() private readonly cacheJobPlugin?: CacheJobPlugin,
+    @Optional() private readonly eventEmitter?: EventEmitter2,
+  ) {}
 
   @Process()
   async handleComputeJob(job: Job<ComputeJobData>): Promise<JobResult> {
@@ -17,10 +23,51 @@ export class ComputeJobProcessor {
     );
 
     try {
+      // Check cache before execution
+      if (this.cacheJobPlugin) {
+        const cachedResult = await this.cacheJobPlugin.checkCache(job);
+
+        // If cache-only mode and no cache hit, return error
+        if (this.cacheJobPlugin.shouldCacheOnly(job) && !cachedResult) {
+          this.logger.warn(`Cache-only mode for job ${job.id} but no cache hit`);
+          return {
+            success: false,
+            error: 'Cache-only mode but no cached result available',
+          };
+        }
+
+        // If cache hit, return cached result
+        if (cachedResult) {
+          this.logger.log(`Using cached result for job ${job.id}`);
+          this.eventEmitter?.emit('compute.job.cache.hit', {
+            jobId: job.id,
+            jobType: job.data.type,
+          });
+
+          return {
+            success: true,
+            data: cachedResult.result,
+          };
+        }
+      }
+
       // Route to appropriate handler based on job type
       const result = await this.processJobByType(job);
 
+      // Store result in cache
+      if (this.cacheJobPlugin && job.data.cacheConfig?.enabled !== false) {
+        await this.cacheJobPlugin.storeResult(job, result);
+      }
+
       this.logger.log(`Job ${job.id} completed successfully`);
+
+      // Emit job completion event for dependency invalidation
+      this.eventEmitter?.emit('compute.job.completed', {
+        jobId: job.id,
+        jobType: job.data.type,
+        result,
+      });
+
       return {
         success: true,
         data: result,
@@ -43,6 +90,13 @@ export class ComputeJobProcessor {
           job,
           `Max retries exceeded: ${error.message}`,
         );
+
+        // Emit job failure event
+        this.eventEmitter?.emit('compute.job.failed', {
+          jobId: job.id,
+          jobType: job.data.type,
+          error: error.message,
+        });
         
         return {
           success: false,
@@ -210,6 +264,13 @@ export class ComputeJobProcessor {
 
     // Log to monitoring/analytics
     await this.logJobMetrics(job, 'completed', result);
+
+    // Emit cache-related metrics
+    this.eventEmitter?.emit('compute.job.completed.metrics', {
+      jobId: job.id,
+      jobType: job.data.type,
+      duration: job.finishedOn ? job.finishedOn - job.processedOn : null,
+    });
   }
 
   /**

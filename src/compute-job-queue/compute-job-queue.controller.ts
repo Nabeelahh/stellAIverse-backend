@@ -159,7 +159,7 @@ export class QueueController {
   }
 
   @Get('dead-letter')
-  @ApiOperation({ summary: 'Get dead letter queue jobs' }}
+  @ApiOperation({ summary: 'Get dead letter queue jobs' })
   @ApiQuery({ name: 'start', required: false, type: Number })
   @ApiQuery({ name: 'end', required: false, type: Number })
   @ApiResponse({ status: 200, description: 'Dead letter jobs retrieved' })
