@@ -2,8 +2,8 @@ import { Module } from '@nestjs/common';
 import { BullModule } from '@nestjs/bull';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { QueueService } from './queue.service';
-import { ComputeJobProcessor } from './processors/compute-job.processor';
-import { QueueHealthIndicator } from './health/queue-health.indicator';
+import { ComputeJobProcessor } from './compute-job.processor';
+import { QueueHealthIndicator } from './compute-job-healt.indicators';
 
 @Module({
   imports: [

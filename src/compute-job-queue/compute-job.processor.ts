@@ -1,7 +1,7 @@
 import { Process, Processor, OnQueueFailed, OnQueueCompleted } from '@nestjs/bull';
 import { Logger } from '@nestjs/common';
 import { Job } from 'bull';
-import { ComputeJobData, JobResult, QueueService } from '../queue.service';
+import { ComputeJobData, JobResult, QueueService } from './queue.service';
 
 @Processor('compute-jobs')
 export class ComputeJobProcessor {
