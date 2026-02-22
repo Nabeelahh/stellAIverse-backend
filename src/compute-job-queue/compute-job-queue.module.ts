@@ -6,6 +6,7 @@ import { QueueService } from './queue.service';
 import { ComputeJobProcessor } from './compute-job.processor';
 import { QueueHealthIndicator } from './compute-job-healt.indicators';
 import { CacheModule } from '../cache/cache.module';
+import { RetryPolicyService } from './retry-policy.service';
 
 @Module({
   imports: [
@@ -58,7 +59,12 @@ import { CacheModule } from '../cache/cache.module';
     CacheModule,
     EventEmitterModule.forRoot(),
   ],
-  providers: [QueueService, ComputeJobProcessor, QueueHealthIndicator],
+  providers: [
+    QueueService,
+    ComputeJobProcessor,
+    QueueHealthIndicator,
+    RetryPolicyService,
+  ],
   exports: [QueueService, BullModule, CacheModule],
 })
 export class QueueModule {}

@@ -23,7 +23,7 @@ import {
   CreateRecurringJobDto,
   JobResponseDto,
   QueueStatsDto,
-} from './dto/queue.dto';
+} from './compute.job.dto';
 
 @ApiTags('queue')
 @Controller('queue')
@@ -42,6 +42,8 @@ export class QueueController {
       type: createJobDto.type,
       payload: createJobDto.payload,
       userId: createJobDto.userId,
+      priority: createJobDto.priority,
+      groupKey: createJobDto.groupKey,
       metadata: createJobDto.metadata,
     });
 
@@ -59,6 +61,8 @@ export class QueueController {
         type: createDelayedJobDto.type,
         payload: createDelayedJobDto.payload,
         userId: createDelayedJobDto.userId,
+        priority: createDelayedJobDto.priority,
+        groupKey: createDelayedJobDto.groupKey,
         metadata: createDelayedJobDto.metadata,
       },
       createDelayedJobDto.delayMs,
@@ -78,6 +82,8 @@ export class QueueController {
         type: createRecurringJobDto.type,
         payload: createRecurringJobDto.payload,
         userId: createRecurringJobDto.userId,
+        priority: createRecurringJobDto.priority,
+        groupKey: createRecurringJobDto.groupKey,
         metadata: createRecurringJobDto.metadata,
       },
       createRecurringJobDto.cronExpression,
