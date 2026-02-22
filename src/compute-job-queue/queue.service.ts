@@ -1,11 +1,14 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectQueue } from '@nestjs/bull';
 import { Queue, Job, JobOptions } from 'bull';
+import { RetryPolicyService } from './retry-policy.service';
 
 export interface ComputeJobData {
   type: string;
   payload: any;
   userId?: string;
+  priority?: number;
+  groupKey?: string;
   metadata?: Record<string, any>;
 }
 
@@ -24,6 +27,7 @@ export class QueueService {
     private readonly computeQueue: Queue<ComputeJobData>,
     @InjectQueue('dead-letter-queue')
     private readonly deadLetterQueue: Queue<ComputeJobData>,
+    private readonly retryPolicyService: RetryPolicyService,
   ) {}
 
   /**
@@ -34,9 +38,14 @@ export class QueueService {
     options?: JobOptions,
   ): Promise<Job<ComputeJobData>> {
     try {
-      const job = await this.computeQueue.add(data.type, data, {
+      const retryPolicy = this.retryPolicyService.getPolicy(data.type);
+      const normalizedData = this.normalizeJobData(data);
+      const job = await this.computeQueue.add(data.type, normalizedData, {
+        attempts: options?.attempts ?? retryPolicy.maxAttempts,
+        backoff: options?.backoff ?? retryPolicy.backoff,
+        priority: options?.priority ?? data.priority,
         ...options,
-        jobId: options?.jobId || this.generateJobId(data),
+        jobId: options?.jobId || this.generateJobId(normalizedData),
       });
 
       this.logger.log(`Job added: ${job.id} (type: ${data.type})`);
@@ -255,6 +264,21 @@ export class QueueService {
     const timestamp = Date.now();
     const userId = data.userId || 'anonymous';
     const type = data.type;
-    return `${type}-${userId}-${timestamp}`;
+    const groupKeySegment = data.groupKey ? `${data.groupKey}-` : '';
+    return `${groupKeySegment}${type}-${userId}-${timestamp}`;
+  }
+
+  private normalizeJobData(data: ComputeJobData): ComputeJobData {
+    if (!data.groupKey) {
+      return data;
+    }
+
+    return {
+      ...data,
+      metadata: {
+        ...data.metadata,
+        groupKey: data.groupKey,
+      },
+    };
   }
 }

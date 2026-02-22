@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsObject, IsNumber, Min, IsEnum, IsBoolean, ValidateNested } from 'class-validator';
+import { IsString, IsOptional, IsObject, IsNumber, Min, Max, IsEnum, ValidateNested } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import { CacheConfigDto } from '../cache/dto/cache-config.dto';
@@ -42,6 +42,26 @@ export class CreateJobDto {
   @IsOptional()
   @IsObject()
   metadata?: Record<string, any>;
+
+  @ApiPropertyOptional({
+    description: 'Queue priority (lower value means higher priority)',
+    example: 1,
+    minimum: 1,
+    maximum: 100,
+  })
+  @IsOptional()
+  @IsNumber()
+  @Min(1)
+  @Max(100)
+  priority?: number;
+
+  @ApiPropertyOptional({
+    description: 'Grouping key for related jobs (batch/correlation key)',
+    example: 'bulk-import-2026-02-22',
+  })
+  @IsOptional()
+  @IsString()
+  groupKey?: string;
 
   @ApiPropertyOptional({
     description: 'Cache configuration for this job',

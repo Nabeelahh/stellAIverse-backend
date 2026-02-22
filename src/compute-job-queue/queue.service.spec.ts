@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { getQueueToken } from '@nestjs/bull';
 import { Queue, Job } from 'bull';
 import { QueueService, ComputeJobData } from './queue.service';
+import { RetryPolicyService } from './retry-policy.service';
 
 describe('QueueService', () => {
   let service: QueueService;
@@ -32,6 +33,28 @@ describe('QueueService', () => {
     getJobs: jest.fn(),
   };
 
+  const mockRetryPolicyService = {
+    getPolicy: jest.fn((jobType: string) => {
+      if (jobType === 'batch-operation') {
+        return {
+          maxAttempts: 5,
+          backoff: {
+            type: 'exponential',
+            delay: 1000,
+          },
+        };
+      }
+
+      return {
+        maxAttempts: 3,
+        backoff: {
+          type: 'exponential',
+          delay: 2000,
+        },
+      };
+    }),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -43,6 +66,10 @@ describe('QueueService', () => {
         {
           provide: getQueueToken('dead-letter-queue'),
           useValue: mockDeadLetterQueue,
+        },
+        {
+          provide: RetryPolicyService,
+          useValue: mockRetryPolicyService,
         },
       ],
     }).compile();
@@ -75,8 +102,105 @@ describe('QueueService', () => {
       expect(mockComputeQueue.add).toHaveBeenCalledWith(
         'test',
         jobData,
-        expect.any(Object),
+        expect.objectContaining({
+          attempts: 3,
+          backoff: {
+            type: 'exponential',
+            delay: 2000,
+          },
+        }),
       );
+    });
+
+    it('should apply priority and group key attributes', async () => {
+      const jobData: ComputeJobData = {
+        type: 'batch-operation',
+        payload: { items: [1, 2, 3] },
+        priority: 1,
+        groupKey: 'bulk-001',
+      };
+
+      const mockJob = {
+        id: 'job-priority-1',
+        data: jobData,
+      } as Job<ComputeJobData>;
+
+      mockComputeQueue.add.mockResolvedValue(mockJob);
+
+      await service.addComputeJob(jobData);
+
+      expect(mockComputeQueue.add).toHaveBeenCalledWith(
+        'batch-operation',
+        expect.objectContaining({
+          groupKey: 'bulk-001',
+          metadata: expect.objectContaining({
+            groupKey: 'bulk-001',
+          }),
+        }),
+        expect.objectContaining({
+          priority: 1,
+        }),
+      );
+    });
+
+    it('should configure retries based on job type policy', async () => {
+      const jobData: ComputeJobData = {
+        type: 'batch-operation',
+        payload: { items: [] },
+      };
+
+      const mockJob = {
+        id: 'job-retry-1',
+        data: jobData,
+      } as Job<ComputeJobData>;
+
+      mockComputeQueue.add.mockResolvedValue(mockJob);
+
+      await service.addComputeJob(jobData);
+
+      expect(mockRetryPolicyService.getPolicy).toHaveBeenCalledWith('batch-operation');
+      expect(mockComputeQueue.add).toHaveBeenCalledWith(
+        'batch-operation',
+        expect.any(Object),
+        expect.objectContaining({
+          attempts: 5,
+          backoff: {
+            type: 'exponential',
+            delay: 1000,
+          },
+        }),
+      );
+    });
+
+    it('should preserve priority ordering configuration (lower is higher priority)', async () => {
+      const highPriorityJob = {
+        id: 'job-high',
+        data: { type: 'batch-operation', payload: {}, priority: 1 },
+      } as unknown as Job<ComputeJobData>;
+      const lowPriorityJob = {
+        id: 'job-low',
+        data: { type: 'batch-operation', payload: {}, priority: 10 },
+      } as unknown as Job<ComputeJobData>;
+
+      mockComputeQueue.add
+        .mockResolvedValueOnce(highPriorityJob)
+        .mockResolvedValueOnce(lowPriorityJob);
+
+      await service.addComputeJob({
+        type: 'batch-operation',
+        payload: {},
+        priority: 1,
+      });
+      await service.addComputeJob({
+        type: 'batch-operation',
+        payload: {},
+        priority: 10,
+      });
+
+      const firstCallOptions = mockComputeQueue.add.mock.calls[0][2];
+      const secondCallOptions = mockComputeQueue.add.mock.calls[1][2];
+
+      expect(firstCallOptions.priority).toBeLessThan(secondCallOptions.priority);
     });
   });
 

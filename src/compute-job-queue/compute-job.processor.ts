@@ -2,24 +2,26 @@ import { Process, Processor, OnQueueFailed, OnQueueCompleted } from '@nestjs/bul
 import { Logger, Inject, Optional } from '@nestjs/common';
 import { Job } from 'bull';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { ComputeJobData, JobResult, QueueService } from '../queue.service';
+import { ComputeJobData, JobResult, QueueService } from './queue.service';
 import { CacheJobPlugin } from '../cache/plugins/cache-job.plugin';
+import { RetryPolicyService } from './retry-policy.service';
 
 @Processor('compute-jobs')
 export class ComputeJobProcessor {
   private readonly logger = new Logger(ComputeJobProcessor.name);
-  private readonly MAX_RETRIES = 3;
 
   constructor(
     private readonly queueService: QueueService,
+    private readonly retryPolicyService: RetryPolicyService,
     @Optional() private readonly cacheJobPlugin?: CacheJobPlugin,
     @Optional() private readonly eventEmitter?: EventEmitter2,
   ) {}
 
   @Process()
   async handleComputeJob(job: Job<ComputeJobData>): Promise<JobResult> {
+    const maxAttempts = this.retryPolicyService.getPolicy(job.data.type).maxAttempts;
     this.logger.log(
-      `Processing job ${job.id} (type: ${job.data.type}, attempt: ${job.attemptsMade + 1}/${this.MAX_RETRIES})`,
+      `Processing job ${job.id} (type: ${job.data.type}, attempt: ${job.attemptsMade + 1}/${maxAttempts})`,
     );
 
     try {
@@ -80,8 +82,9 @@ export class ComputeJobProcessor {
 
       // Determine if we should retry or move to dead letter queue
       if (this.shouldRetry(job, error)) {
+        const retryMaxAttempts = this.retryPolicyService.getPolicy(job.data.type).maxAttempts;
         this.logger.warn(
-          `Job ${job.id} will be retried (attempt ${job.attemptsMade + 1}/${this.MAX_RETRIES})`,
+          `Job ${job.id} will be retried (attempt ${job.attemptsMade + 1}/${retryMaxAttempts})`,
         );
         throw error; // Let BullMQ handle the retry
       } else {
@@ -224,8 +227,10 @@ export class ComputeJobProcessor {
    * Determine if a job should be retried based on error type
    */
   private shouldRetry(job: Job<ComputeJobData>, error: Error): boolean {
+    const maxAttempts = this.retryPolicyService.getPolicy(job.data.type).maxAttempts;
+
     // Don't retry if max attempts reached
-    if (job.attemptsMade >= this.MAX_RETRIES - 1) {
+    if (job.attemptsMade >= maxAttempts - 1) {
       return false;
     }
 
@@ -278,6 +283,7 @@ export class ComputeJobProcessor {
    */
   @OnQueueFailed()
   async onFailed(job: Job<ComputeJobData>, error: Error) {
+    const maxAttempts = this.retryPolicyService.getPolicy(job.data.type).maxAttempts;
     this.logger.error(
       `Job ${job.id} failed after ${job.attemptsMade} attempts: ${error.message}`,
       error.stack,
@@ -287,7 +293,7 @@ export class ComputeJobProcessor {
     await this.logJobMetrics(job, 'failed', { error: error.message });
 
     // If this was the final attempt, it's already in dead letter queue
-    if (job.attemptsMade >= this.MAX_RETRIES) {
+    if (job.attemptsMade >= maxAttempts) {
       this.logger.warn(
         `Job ${job.id} exhausted all retries and is in dead letter queue`,
       );
