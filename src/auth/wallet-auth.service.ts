@@ -9,6 +9,8 @@ import { User } from '../user/entities/user.entity';
 export interface AuthPayload {
   address: string;
   email?: string;
+  role?: string;
+  roles?: string[];
   iat: number;
 }
 
@@ -62,10 +64,11 @@ export class WalletAuthService {
       where: { walletAddress: recoveredAddress.toLowerCase() },
     });
 
-    // Issue JWT token with email if available
+    // Issue JWT token with email and role if available
     const payload: AuthPayload = {
       address: recoveredAddress.toLowerCase(),
       email: user?.emailVerified ? user.email : undefined,
+      role: user?.role || 'user',
       iat: Math.floor(Date.now() / 1000),
     };
 

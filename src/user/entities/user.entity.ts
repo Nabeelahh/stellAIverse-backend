@@ -7,6 +7,12 @@ import {
   Index,
 } from 'typeorm';
 
+export enum UserRole {
+  USER = 'user',
+  OPERATOR = 'operator',
+  ADMIN = 'admin',
+}
+
 @Entity('users')
 export class User {
   @PrimaryGeneratedColumn('uuid')
@@ -22,6 +28,12 @@ export class User {
 
   @Column({ default: false })
   emailVerified: boolean;
+
+  @Column({
+    type: 'varchar',
+    default: UserRole.USER,
+  })
+  role: UserRole;
 
   @CreateDateColumn()
   createdAt: Date;
