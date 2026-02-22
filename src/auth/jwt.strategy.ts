@@ -38,6 +38,8 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     return {
       address: payload.address,
       email: payload.email,
+      role: payload.role || 'user',
+      roles: payload.roles || (payload.role ? [payload.role] : ['user']),
     };
   }
 }

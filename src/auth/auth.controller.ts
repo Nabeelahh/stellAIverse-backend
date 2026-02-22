@@ -16,6 +16,8 @@ import { LinkEmailDto } from "./dto/link-email.dto";
 import { VerifyEmailDto } from "./dto/verify-email.dto";
 import { RequestRecoveryDto } from "./dto/request-recovery.dto";
 import { Throttle } from "@nestjs/throttler";
+import { Roles, Role } from "../common/decorators/roles.decorator";
+import { RolesGuard } from "../common/guard/roles.guard";
 
 export class RequestChallengeDto {
   address: string;
@@ -98,5 +100,23 @@ export class AuthController {
   @Post("recovery/verify")
   async verifyRecovery(@Body() dto: RequestRecoveryDto) {
     return this.recoveryService.verifyRecoveryAndGetChallenge(dto.email);
+  }
+
+  // Admin Endpoints (RBAC protected)
+
+  @Roles(Role.ADMIN)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Get("admin/users")
+  async listUsers() {
+    // Example admin-only endpoint
+    return { message: 'Admin access granted. User listing would go here.' };
+  }
+
+  @Roles(Role.ADMIN, Role.OPERATOR)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Get("admin/stats")
+  async getStats() {
+    // Example operator/admin endpoint
+    return { message: 'Stats access granted for admin/operator roles.' };
   }
 }
