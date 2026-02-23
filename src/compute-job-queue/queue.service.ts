@@ -1,7 +1,8 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 import { InjectQueue } from '@nestjs/bull';
-import { Queue, Job, JobOptions } from 'bull';
+import { Queue, Job, JobOptions, DoneCallback } from 'bull';
 import { RetryPolicyService } from './retry-policy.service';
+import { BatchStrategy } from './dto/batch-job.dto';
 
 export interface ComputeJobData {
   type: string;
@@ -16,6 +17,38 @@ export interface JobResult {
   success: boolean;
   data?: any;
   error?: string;
+}
+
+export interface BatchJobData {
+  batchId: string;
+  config: {
+    strategy: BatchStrategy;
+    maxConcurrency?: number;
+    continueOnError?: boolean;
+    priority?: number;
+    groupKey?: string;
+    timeoutMs?: number;
+  };
+  jobs: ComputeJobData[];
+  userId?: string;
+  metadata?: Record<string, any>;
+}
+
+export interface BatchJobProgress {
+  batchId: string;
+  totalJobs: number;
+  completedJobs: number;
+  failedJobs: number;
+  status: 'running' | 'completed' | 'failed' | 'cancelled';
+  results: Array<{
+    jobId: string;
+    originalJobId?: string;
+    status: 'pending' | 'active' | 'completed' | 'failed';
+    result?: any;
+    error?: string;
+  }>;
+  startedAt: Date;
+  completedAt?: Date;
 }
 
 @Injectable()
@@ -40,20 +73,76 @@ export class QueueService {
     try {
       const retryPolicy = this.retryPolicyService.getPolicy(data.type);
       const normalizedData = this.normalizeJobData(data);
+      
+      // Apply dynamic priority calculation if not explicitly set
+      const priority = this.calculateDynamicPriority(data, options?.priority);
+      
       const job = await this.computeQueue.add(data.type, normalizedData, {
         attempts: options?.attempts ?? retryPolicy.maxAttempts,
         backoff: options?.backoff ?? retryPolicy.backoff,
-        priority: options?.priority ?? data.priority,
+        priority: priority,
         ...options,
         jobId: options?.jobId || this.generateJobId(normalizedData),
       });
 
-      this.logger.log(`Job added: ${job.id} (type: ${data.type})`);
+      this.logger.log(`Job added: ${job.id} (type: ${data.type}, priority: ${priority})`);
       return job;
     } catch (error) {
       this.logger.error(`Failed to add job: ${error.message}`, error.stack);
       throw error;
     }
+  }
+
+  /**
+   * Calculate dynamic priority based on various factors
+   */
+  private calculateDynamicPriority(data: ComputeJobData, explicitPriority?: number): number {
+    if (explicitPriority !== undefined) {
+      return explicitPriority;
+    }
+
+    // Base priority starts at 10 (higher number = lower priority)
+    let priority = 10;
+
+    // Adjust priority based on job type
+    switch (data.type) {
+      case 'email-notification':
+        priority = 8; // Higher priority (lower number)
+        break;
+      case 'data-processing':
+        priority = 12; // Lower priority (higher number)
+        break;
+      case 'ai-computation':
+        priority = 15; // Lowest priority (highest number)
+        break;
+      case 'batch-operation':
+        priority = 5; // High priority (low number)
+        break;
+      default:
+        priority = 10; // Default
+    }
+
+    // Adjust based on user role/priority (if available)
+    if (data.userId) {
+      // In a real system, you might check user roles here
+      // For now, just a simple adjustment
+      if (data.userId.startsWith('premium-')) {
+        priority = Math.max(1, priority - 3); // Higher priority for premium users
+      }
+    }
+
+    // Adjust based on size of payload (larger payloads get lower priority)
+    if (data.payload && typeof data.payload === 'object') {
+      const payloadSize = JSON.stringify(data.payload).length;
+      if (payloadSize > 10000) { // More than 10KB
+        priority += 5; // Lower priority for large payloads
+      } else if (payloadSize > 5000) { // More than 5KB
+        priority += 2; // Slightly lower priority
+      }
+    }
+
+    // Ensure priority stays within acceptable bounds (1-100)
+    return Math.max(1, Math.min(100, priority));
   }
 
   /**
@@ -237,6 +326,321 @@ export class QueueService {
   async emptyQueue(): Promise<void> {
     await this.computeQueue.empty();
     this.logger.warn('Compute queue emptied');
+  }
+
+  /**
+   * Add a batch of jobs with grouping and orchestration
+   */
+  async addBatchJob(batchJobData: BatchJobData): Promise<BatchJobProgress> {
+    const { batchId, config, jobs, userId, metadata } = batchJobData;
+    
+    if (!jobs || jobs.length === 0) {
+      throw new BadRequestException('Batch jobs cannot be empty');
+    }
+
+    // Create initial progress tracking
+    const progress: BatchJobProgress = {
+      batchId,
+      totalJobs: jobs.length,
+      completedJobs: 0,
+      failedJobs: 0,
+      status: 'running',
+      results: jobs.map((_, index) => ({
+        jobId: `${batchId}-job-${index}`,
+        status: 'pending',
+      })),
+      startedAt: new Date(),
+    };
+
+    // Store batch progress in a temporary storage (in a real app, this would be in Redis/DB)
+    this.storeBatchProgress(progress);
+
+    try {
+      // Process jobs based on the strategy
+      switch (config.strategy) {
+        case 'sequential':
+          await this.processSequentially(batchId, jobs, config, userId);
+          break;
+        
+        case 'parallel':
+          await this.processInParallel(batchId, jobs, config, userId);
+          break;
+          
+        case 'priority-based':
+          await this.processByPriority(batchId, jobs, config, userId);
+          break;
+          
+        default:
+          await this.processInParallel(batchId, jobs, config, userId);
+      }
+
+      return progress;
+    } catch (error) {
+      this.logger.error(`Batch job ${batchId} failed: ${error.message}`, error.stack);
+      progress.status = 'failed';
+      this.updateBatchProgress(batchId, progress);
+      throw error;
+    }
+  }
+
+  private async processSequentially(
+    batchId: string,
+    jobs: ComputeJobData[],
+    config: BatchJobData['config'],
+    userId?: string
+  ): Promise<void> {
+    for (let i = 0; i < jobs.length; i++) {
+      const jobData = { ...jobs[i] };
+      
+      // Apply batch-level configurations if not set at job level
+      if (config.priority && jobData.priority === undefined) {
+        jobData.priority = config.priority;
+      }
+      if (config.groupKey && !jobData.groupKey) {
+        jobData.groupKey = config.groupKey;
+      }
+      
+      try {
+        const job = await this.addComputeJob(jobData);
+        const result = await job.finished();
+        
+        // Update progress
+        const progress = this.getBatchProgress(batchId);
+        if (progress) {
+          const jobIndex = progress.results.findIndex(r => r.jobId.includes(`-job-${i}`));
+          if (jobIndex !== -1) {
+            progress.results[jobIndex] = {
+              ...progress.results[jobIndex],
+              jobId: job.id,
+              originalJobId: `${batchId}-job-${i}`,
+              status: 'completed',
+              result: result,
+            };
+            progress.completedJobs++;
+          }
+          this.updateBatchProgress(batchId, progress);
+        }
+      } catch (error) {
+        const progress = this.getBatchProgress(batchId);
+        if (progress) {
+          const jobIndex = progress.results.findIndex(r => r.jobId.includes(`-job-${i}`));
+          if (jobIndex !== -1) {
+            progress.results[jobIndex] = {
+              ...progress.results[jobIndex],
+              jobId: `${batchId}-job-${i}`,
+              status: 'failed',
+              error: error.message,
+            };
+            progress.failedJobs++;
+            
+            if (!config.continueOnError) {
+              progress.status = 'failed';
+              this.updateBatchProgress(batchId, progress);
+              throw error;
+            }
+          }
+          this.updateBatchProgress(batchId, progress);
+        }
+      }
+    }
+    
+    const progress = this.getBatchProgress(batchId);
+    if (progress) {
+      progress.status = 'completed';
+      progress.completedAt = new Date();
+      this.updateBatchProgress(batchId, progress);
+    }
+  }
+
+  private async processInParallel(
+    batchId: string,
+    jobs: ComputeJobData[],
+    config: BatchJobData['config'],
+    userId?: string
+  ): Promise<void> {
+    const concurrency = config.maxConcurrency || 5;
+    const progress = this.getBatchProgress(batchId);
+    
+    // Process jobs in chunks based on concurrency
+    for (let i = 0; i < jobs.length; i += concurrency) {
+      const chunk = jobs.slice(i, i + concurrency);
+      const promises = chunk.map(async (jobData, chunkIndex) => {
+        const actualIndex = i + chunkIndex;
+        const modifiedJobData = { ...jobData };
+        
+        // Apply batch-level configurations if not set at job level
+        if (config.priority && modifiedJobData.priority === undefined) {
+          modifiedJobData.priority = config.priority;
+        }
+        if (config.groupKey && !modifiedJobData.groupKey) {
+          modifiedJobData.groupKey = config.groupKey;
+        }
+        
+        try {
+          const job = await this.addComputeJob(modifiedJobData);
+          const result = await job.finished();
+          
+          // Update progress
+          if (progress) {
+            const jobIndex = progress.results.findIndex(r => r.jobId.includes(`-job-${actualIndex}`));
+            if (jobIndex !== -1) {
+              progress.results[jobIndex] = {
+                ...progress.results[jobIndex],
+                jobId: job.id,
+                originalJobId: `${batchId}-job-${actualIndex}`,
+                status: 'completed',
+                result: result,
+              };
+              progress.completedJobs++;
+            }
+            this.updateBatchProgress(batchId, progress);
+          }
+        } catch (error) {
+          if (progress) {
+            const jobIndex = progress.results.findIndex(r => r.jobId.includes(`-job-${actualIndex}`));
+            if (jobIndex !== -1) {
+              progress.results[jobIndex] = {
+                ...progress.results[jobIndex],
+                jobId: `${batchId}-job-${actualIndex}`,
+                status: 'failed',
+                error: error.message,
+              };
+              progress.failedJobs++;
+              
+              if (!config.continueOnError) {
+                progress.status = 'failed';
+                this.updateBatchProgress(batchId, progress);
+                throw error;
+              }
+            }
+            this.updateBatchProgress(batchId, progress);
+          }
+        }
+      });
+      
+      await Promise.all(promises);
+    }
+    
+    if (progress) {
+      progress.status = 'completed';
+      progress.completedAt = new Date();
+      this.updateBatchProgress(batchId, progress);
+    }
+  }
+
+  private async processByPriority(
+    batchId: string,
+    jobs: ComputeJobData[],
+    config: BatchJobData['config'],
+    userId?: string
+  ): Promise<void> {
+    // Sort jobs by priority (lower number = higher priority)
+    const sortedJobs = [...jobs].sort((a, b) => {
+      const priorityA = a.priority || 10; // Default priority is 10
+      const priorityB = b.priority || 10;
+      return priorityA - priorityB;
+    });
+
+    // Process highest priority jobs first
+    for (const jobData of sortedJobs) {
+      const modifiedJobData = { ...jobData };
+      
+      // Apply batch-level configurations if not set at job level
+      if (config.priority && modifiedJobData.priority === undefined) {
+        modifiedJobData.priority = config.priority;
+      }
+      if (config.groupKey && !modifiedJobData.groupKey) {
+        modifiedJobData.groupKey = config.groupKey;
+      }
+      
+      try {
+        const job = await this.addComputeJob(modifiedJobData);
+        const result = await job.finished();
+        
+        // Update progress (find original position)
+        const originalIndex = jobs.indexOf(jobData);
+        const progress = this.getBatchProgress(batchId);
+        if (progress && originalIndex !== -1) {
+          const jobIndex = progress.results.findIndex(r => r.jobId.includes(`-job-${originalIndex}`));
+          if (jobIndex !== -1) {
+            progress.results[jobIndex] = {
+              ...progress.results[jobIndex],
+              jobId: job.id,
+              originalJobId: `${batchId}-job-${originalIndex}`,
+              status: 'completed',
+              result: result,
+            };
+            progress.completedJobs++;
+          }
+          this.updateBatchProgress(batchId, progress);
+        }
+      } catch (error) {
+        const originalIndex = jobs.indexOf(jobData);
+        const progress = this.getBatchProgress(batchId);
+        if (progress && originalIndex !== -1) {
+          const jobIndex = progress.results.findIndex(r => r.jobId.includes(`-job-${originalIndex}`));
+          if (jobIndex !== -1) {
+            progress.results[jobIndex] = {
+              ...progress.results[jobIndex],
+              jobId: `${batchId}-job-${originalIndex}`,
+              status: 'failed',
+              error: error.message,
+            };
+            progress.failedJobs++;
+            
+            if (!config.continueOnError) {
+              progress.status = 'failed';
+              this.updateBatchProgress(batchId, progress);
+              throw error;
+            }
+          }
+          this.updateBatchProgress(batchId, progress);
+        }
+      }
+    }
+    
+    const progress = this.getBatchProgress(batchId);
+    if (progress) {
+      progress.status = 'completed';
+      progress.completedAt = new Date();
+      this.updateBatchProgress(batchId, progress);
+    }
+  }
+
+  // In-memory storage for batch progress (in production, use Redis or DB)
+  private batchProgressStore = new Map<string, BatchJobProgress>();
+
+  private storeBatchProgress(progress: BatchJobProgress): void {
+    this.batchProgressStore.set(progress.batchId, progress);
+  }
+
+  private getBatchProgress(batchId: string): BatchJobProgress | undefined {
+    return this.batchProgressStore.get(batchId);
+  }
+
+  private updateBatchProgress(batchId: string, progress: BatchJobProgress): void {
+    this.batchProgressStore.set(batchId, progress);
+  }
+
+  /**
+   * Get batch job progress
+   */
+  getBatchJobProgress(batchId: string): BatchJobProgress | null {
+    return this.batchProgressStore.get(batchId) || null;
+  }
+
+  /**
+   * Cancel a batch job
+   */
+  async cancelBatchJob(batchId: string): Promise<void> {
+    const progress = this.batchProgressStore.get(batchId);
+    if (!progress) {
+      throw new Error(`Batch job ${batchId} not found`);
+    }
+
+    progress.status = 'cancelled';
+    progress.completedAt = new Date();
+    this.batchProgressStore.set(batchId, progress);
   }
 
   /**
