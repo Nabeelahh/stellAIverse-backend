@@ -1,7 +1,7 @@
 import { IsString, IsOptional, IsObject, IsNumber, Min, Max, IsEnum, ValidateNested, IsArray, IsBoolean } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { CreateJobDto, JobType } from './compute.job.dto';
+import { CreateJobDto, JobType } from '../compute.job.dto';
 
 export enum BatchStrategy {
   SEQUENTIAL = 'sequential',
