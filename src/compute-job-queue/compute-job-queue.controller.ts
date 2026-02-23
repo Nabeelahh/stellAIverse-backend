@@ -24,6 +24,7 @@ import {
   JobResponseDto,
   QueueStatsDto,
 } from './compute.job.dto';
+import { CreateBatchJobDto, BatchJobResult } from './dto/batch-job.dto';
 
 @ApiTags('queue')
 @Controller('queue')
@@ -203,6 +204,88 @@ export class QueueController {
   @ApiResponse({ status: 204, description: 'Old jobs cleaned' })
   async cleanOldJobs(@Query('grace') grace?: number): Promise<void> {
     await this.queueService.cleanOldJobs(grace ? Number(grace) : undefined);
+  }
+
+  @Post('batch')
+  @ApiOperation({ summary: 'Add a batch of jobs with orchestration' })
+  @ApiResponse({
+    status: 201,
+    description: 'Batch job created successfully',
+    type: BatchJobResult,
+  })
+  async addBatchJob(@Body() createBatchJobDto: CreateBatchJobDto): Promise<BatchJobResult> {
+    const batchJobData = {
+      batchId: `batch-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      config: createBatchJobDto.config,
+      jobs: createBatchJobDto.jobs.map(job => ({
+        type: job.type,
+        payload: job.payload,
+        userId: job.userId,
+        priority: job.priority,
+        groupKey: job.groupKey,
+        metadata: {
+          ...job.metadata,
+          batchId: createBatchJobDto.config.groupKey,
+        },
+      })),
+      userId: createBatchJobDto.userId,
+      metadata: createBatchJobDto.metadata,
+    };
+
+    const progress = await this.queueService.addBatchJob(batchJobData);
+    
+    return {
+      batchId: progress.batchId,
+      jobResults: progress.results.map(r => ({
+        jobId: r.jobId,
+        status: r.status,
+        result: r.result,
+        error: r.error,
+      })),
+      status: progress.status,
+      totalJobs: progress.totalJobs,
+      completedJobs: progress.completedJobs,
+      failedJobs: progress.failedJobs,
+      startedAt: progress.startedAt.toISOString(),
+      completedAt: progress.completedAt?.toISOString(),
+    };
+  }
+
+  @Get('batch/:id')
+  @ApiOperation({ summary: 'Get batch job progress' })
+  @ApiParam({ name: 'id', description: 'Batch Job ID' })
+  @ApiResponse({ status: 200, description: 'Batch job progress retrieved', type: BatchJobResult })
+  @ApiResponse({ status: 404, description: 'Batch job not found' })
+  async getBatchJob(@Param('id') id: string): Promise<BatchJobResult> {
+    const progress = this.queueService.getBatchJobProgress(id);
+    if (!progress) {
+      throw new Error(`Batch job ${id} not found`);
+    }
+
+    return {
+      batchId: progress.batchId,
+      jobResults: progress.results.map(r => ({
+        jobId: r.jobId,
+        status: r.status,
+        result: r.result,
+        error: r.error,
+      })),
+      status: progress.status,
+      totalJobs: progress.totalJobs,
+      completedJobs: progress.completedJobs,
+      failedJobs: progress.failedJobs,
+      startedAt: progress.startedAt.toISOString(),
+      completedAt: progress.completedAt?.toISOString(),
+    };
+  }
+
+  @Post('batch/:id/cancel')
+  @ApiOperation({ summary: 'Cancel a batch job' })
+  @ApiParam({ name: 'id', description: 'Batch Job ID' })
+  @ApiResponse({ status: 200, description: 'Batch job cancelled successfully' })
+  async cancelBatchJob(@Param('id') id: string): Promise<{ message: string }> {
+    await this.queueService.cancelBatchJob(id);
+    return { message: `Batch job ${id} cancelled` };
   }
 
   private formatJobResponse(job: any): JobResponseDto {
