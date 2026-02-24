@@ -1,5 +1,5 @@
-import { DataSource } from 'typeorm';
-import { User, UserRole } from '../user/entities/user.entity';
+import { DataSource } from "typeorm";
+import { User, UserRole } from "../user/entities/user.entity";
 
 /**
  * Seed script to assign roles to existing users.
@@ -17,10 +17,10 @@ async function seedRoles(dataSource: DataSource) {
     .createQueryBuilder()
     .update(User)
     .set({ role: UserRole.USER })
-    .where('role IS NULL')
+    .where("role IS NULL")
     .execute();
 
-  console.log('✅ Default roles assigned to users without a role.');
+  console.log("✅ Default roles assigned to users without a role.");
 
   // Example: Promote a specific wallet address to admin
   // Uncomment and modify the address below to seed an admin user:
@@ -37,7 +37,7 @@ async function seedRoles(dataSource: DataSource) {
   //   console.log(`⚠️  User with address ${adminAddress} not found.`);
   // }
 
-  console.log('🎉 Role seeding complete.');
+  console.log("🎉 Role seeding complete.");
 }
 
 export { seedRoles };

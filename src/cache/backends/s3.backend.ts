@@ -1,7 +1,10 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { CacheEntry, CacheVersionDto } from '../dto/cache-config.dto';
-import { ICacheStorage, CacheStorageConfig } from '../interfaces/cache-storage.interface';
-import { CacheUtils } from '../utils/cache.utils';
+import { Injectable, Logger } from "@nestjs/common";
+import { CacheEntry, CacheVersionDto } from "../dto/cache-config.dto";
+import {
+  ICacheStorage,
+  CacheStorageConfig,
+} from "../interfaces/cache-storage.interface";
+import { CacheUtils } from "../utils/cache.utils";
 
 /**
  * S3 cache backend for large payload storage
@@ -16,18 +19,18 @@ export class S3CacheBackend implements ICacheStorage {
 
   constructor(config: CacheStorageConfig) {
     this.config = {
-      region: 'us-east-1',
-      bucket: 'cache-bucket',
+      region: "us-east-1",
+      bucket: "cache-bucket",
       ...config,
     };
 
     if (!this.config.enabled) {
-      this.logger.warn('S3 cache backend is disabled');
+      this.logger.warn("S3 cache backend is disabled");
       return;
     }
 
     this.logger.warn(
-      'S3 cache backend is not yet implemented. Please install @aws-sdk/client-s3',
+      "S3 cache backend is not yet implemented. Please install @aws-sdk/client-s3",
     );
     // TODO: Initialize S3 client when AWS SDK is added
   }
@@ -139,6 +142,6 @@ export class S3CacheBackend implements ICacheStorage {
   }
 
   async disconnect(): Promise<void> {
-    this.logger.log('S3 cache backend disconnected');
+    this.logger.log("S3 cache backend disconnected");
   }
 }

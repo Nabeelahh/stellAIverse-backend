@@ -1,19 +1,22 @@
-import { Injectable, Logger, OnModuleDestroy } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
+import { Injectable, Logger, OnModuleDestroy } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
 import {
   CacheEntry,
   CacheConfigDto,
   CacheVersionDto,
   CacheMetrics,
   CompressionAlgorithm,
-} from './dto/cache-config.dto';
-import { ICacheStorage, CacheStorageConfig } from './interfaces/cache-storage.interface';
-import { CacheUtils } from './utils/cache.utils';
-import { RedisCacheBackend } from './backends/redis.backend';
-import { MemoryCacheBackend } from './backends/memory.backend';
-import { DynamoDBCacheBackend } from './backends/dynamodb.backend';
-import { S3CacheBackend } from './backends/s3.backend';
-import { EventEmitter2 } from '@nestjs/event-emitter';
+} from "./dto/cache-config.dto";
+import {
+  ICacheStorage,
+  CacheStorageConfig,
+} from "./interfaces/cache-storage.interface";
+import { CacheUtils } from "./utils/cache.utils";
+import { RedisCacheBackend } from "./backends/redis.backend";
+import { MemoryCacheBackend } from "./backends/memory.backend";
+import { DynamoDBCacheBackend } from "./backends/dynamodb.backend";
+import { S3CacheBackend } from "./backends/s3.backend";
+import { EventEmitter2 } from "@nestjs/event-emitter";
 
 @Injectable()
 export class CacheService implements OnModuleDestroy {
@@ -43,46 +46,45 @@ export class CacheService implements OnModuleDestroy {
    * Initialize the appropriate cache backend
    */
   private initializeBackend(): void {
-    const backendType = this.configService.get(
-      'CACHE_BACKEND',
-      'memory',
-    ).toLowerCase();
+    const backendType = this.configService
+      .get("CACHE_BACKEND", "memory")
+      .toLowerCase();
     const cacheConfig: CacheStorageConfig = {
-      enabled: this.configService.get('CACHE_ENABLED', true),
-      host: this.configService.get('CACHE_HOST', 'localhost'),
-      port: this.configService.get('CACHE_PORT', 6379),
-      region: this.configService.get('AWS_REGION', 'us-east-1'),
-      bucket: this.configService.get('CACHE_S3_BUCKET', 'cache-bucket'),
-      password: this.configService.get('CACHE_PASSWORD'),
-      username: this.configService.get('CACHE_USERNAME'),
-      db: this.configService.get('CACHE_DB', 0),
-      ttl: this.configService.get('CACHE_TTL_MS', 24 * 60 * 60 * 1000),
-      maxRetries: this.configService.get('CACHE_MAX_RETRIES', 3),
-      retryDelay: this.configService.get('CACHE_RETRY_DELAY_MS', 1000),
-      connectionTimeout: this.configService.get('CACHE_TIMEOUT_MS', 5000),
-      requestTimeout: this.configService.get('CACHE_REQUEST_TIMEOUT_MS', 5000),
+      enabled: this.configService.get("CACHE_ENABLED", true),
+      host: this.configService.get("CACHE_HOST", "localhost"),
+      port: this.configService.get("CACHE_PORT", 6379),
+      region: this.configService.get("AWS_REGION", "us-east-1"),
+      bucket: this.configService.get("CACHE_S3_BUCKET", "cache-bucket"),
+      password: this.configService.get("CACHE_PASSWORD"),
+      username: this.configService.get("CACHE_USERNAME"),
+      db: this.configService.get("CACHE_DB", 0),
+      ttl: this.configService.get("CACHE_TTL_MS", 24 * 60 * 60 * 1000),
+      maxRetries: this.configService.get("CACHE_MAX_RETRIES", 3),
+      retryDelay: this.configService.get("CACHE_RETRY_DELAY_MS", 1000),
+      connectionTimeout: this.configService.get("CACHE_TIMEOUT_MS", 5000),
+      requestTimeout: this.configService.get("CACHE_REQUEST_TIMEOUT_MS", 5000),
     };
 
     switch (backendType) {
-      case 'redis':
+      case "redis":
         this.backend = new RedisCacheBackend(cacheConfig);
-        this.logger.log('Redis cache backend initialized');
+        this.logger.log("Redis cache backend initialized");
         break;
 
-      case 'dynamodb':
+      case "dynamodb":
         this.backend = new DynamoDBCacheBackend(cacheConfig);
-        this.logger.log('DynamoDB cache backend initialized');
+        this.logger.log("DynamoDB cache backend initialized");
         break;
 
-      case 's3':
+      case "s3":
         this.backend = new S3CacheBackend(cacheConfig);
-        this.logger.log('S3 cache backend initialized');
+        this.logger.log("S3 cache backend initialized");
         break;
 
-      case 'memory':
+      case "memory":
       default:
         this.backend = new MemoryCacheBackend(cacheConfig);
-        this.logger.log('Memory cache backend initialized');
+        this.logger.log("Memory cache backend initialized");
     }
   }
 
@@ -103,11 +105,7 @@ export class CacheService implements OnModuleDestroy {
         payload,
         providerId,
       );
-      const cacheKey = CacheUtils.generateCacheKey(
-        jobType,
-        contentHash,
-        jobId,
-      );
+      const cacheKey = CacheUtils.generateCacheKey(jobType, contentHash, jobId);
 
       const entry = await this.backend.get<T>(cacheKey);
 
@@ -123,7 +121,7 @@ export class CacheService implements OnModuleDestroy {
       if (entry.compressed) {
         data = await CacheUtils.decompress(
           Buffer.from(entry.data as any),
-          entry.version?.providerVersion as any || CompressionAlgorithm.GZIP,
+          (entry.version?.providerVersion as any) || CompressionAlgorithm.GZIP,
         );
       }
 
@@ -162,7 +160,7 @@ export class CacheService implements OnModuleDestroy {
 
       if (!cacheConfig.enabled) {
         this.logger.debug(`Caching disabled for job type: ${jobType}`);
-        return { cacheKey: '', cached: false };
+        return { cacheKey: "", cached: false };
       }
 
       const contentHash = CacheUtils.generateContentHash(
@@ -170,11 +168,7 @@ export class CacheService implements OnModuleDestroy {
         payload,
         providerId,
       );
-      const cacheKey = CacheUtils.generateCacheKey(
-        jobType,
-        contentHash,
-        jobId,
-      );
+      const cacheKey = CacheUtils.generateCacheKey(jobType, contentHash, jobId);
 
       let dataToCache: any = result;
       let compressed = false;
@@ -190,7 +184,7 @@ export class CacheService implements OnModuleDestroy {
       ) {
         const { compressed: compressedData, algorithm } =
           await CacheUtils.compress(result, cacheConfig.compression);
-        dataToCache = compressedData.toString('base64');
+        dataToCache = compressedData.toString("base64");
         compressed = true;
 
         const ratio = CacheUtils.calculateCompressionRatio(
@@ -205,7 +199,9 @@ export class CacheService implements OnModuleDestroy {
       }
 
       const now = new Date();
-      const expiresAt = new Date(now.getTime() + (cacheConfig.ttlMs || 24 * 60 * 60 * 1000));
+      const expiresAt = new Date(
+        now.getTime() + (cacheConfig.ttlMs || 24 * 60 * 60 * 1000),
+      );
 
       const version: CacheVersionDto = {
         jobDefinitionHash: contentHash,
@@ -224,7 +220,7 @@ export class CacheService implements OnModuleDestroy {
         expiresAt: expiresAt.toISOString(),
         version,
         metadata: {
-          providerId: providerId || 'default',
+          providerId: providerId || "default",
           payloadSize: JSON.stringify(payload).length,
           resultSize: JSON.stringify(result).length,
         },
@@ -240,7 +236,7 @@ export class CacheService implements OnModuleDestroy {
       );
 
       // Emit event for cache warming
-      this.eventEmitter.emit('cache.entry.stored', {
+      this.eventEmitter.emit("cache.entry.stored", {
         cacheKey,
         jobType,
         jobId,
@@ -253,7 +249,7 @@ export class CacheService implements OnModuleDestroy {
         `Failed to set cache entry: ${error.message}`,
         error.stack,
       );
-      return { cacheKey: '', cached: false };
+      return { cacheKey: "", cached: false };
     }
   }
 
@@ -272,18 +268,14 @@ export class CacheService implements OnModuleDestroy {
         payload,
         providerId,
       );
-      const cacheKey = CacheUtils.generateCacheKey(
-        jobType,
-        contentHash,
-        jobId,
-      );
+      const cacheKey = CacheUtils.generateCacheKey(jobType, contentHash, jobId);
 
       await this.backend.delete(cacheKey);
 
       this.logger.log(`Cache entry invalidated: ${cacheKey}`);
 
       // Emit event for dependency invalidation
-      this.eventEmitter.emit('cache.entry.invalidated', {
+      this.eventEmitter.emit("cache.entry.invalidated", {
         cacheKey,
         jobType,
         jobId,
@@ -305,7 +297,9 @@ export class CacheService implements OnModuleDestroy {
   async invalidateByJobType(jobType: string): Promise<number> {
     try {
       const count = await this.backend.clearByJobType(jobType);
-      this.logger.log(`Invalidated ${count} cache entries for job type: ${jobType}`);
+      this.logger.log(
+        `Invalidated ${count} cache entries for job type: ${jobType}`,
+      );
       return count;
     } catch (error) {
       this.logger.error(
@@ -322,7 +316,9 @@ export class CacheService implements OnModuleDestroy {
   async invalidateByTags(tags: string[]): Promise<number> {
     try {
       const count = await this.backend.clearByTags(tags);
-      this.logger.log(`Invalidated ${count} cache entries by tags: ${tags.join(', ')}`);
+      this.logger.log(
+        `Invalidated ${count} cache entries by tags: ${tags.join(", ")}`,
+      );
       return count;
     } catch (error) {
       this.logger.error(
@@ -396,12 +392,9 @@ export class CacheService implements OnModuleDestroy {
   async clear(): Promise<void> {
     try {
       await this.backend.clear();
-      this.logger.log('All cache entries cleared');
+      this.logger.log("All cache entries cleared");
     } catch (error) {
-      this.logger.error(
-        `Failed to clear cache: ${error.message}`,
-        error.stack,
-      );
+      this.logger.error(`Failed to clear cache: ${error.message}`, error.stack);
       throw error;
     }
   }
@@ -416,12 +409,16 @@ export class CacheService implements OnModuleDestroy {
       return {
         ...this.metrics,
         totalCacheSize: backendMetrics.size,
-        avgHitLatency: this.hitLatencies.length > 0
-          ? this.hitLatencies.reduce((a, b) => a + b, 0) / this.hitLatencies.length
-          : 0,
-        avgMissLatency: this.missLatencies.length > 0
-          ? this.missLatencies.reduce((a, b) => a + b, 0) / this.missLatencies.length
-          : 0,
+        avgHitLatency:
+          this.hitLatencies.length > 0
+            ? this.hitLatencies.reduce((a, b) => a + b, 0) /
+              this.hitLatencies.length
+            : 0,
+        avgMissLatency:
+          this.missLatencies.length > 0
+            ? this.missLatencies.reduce((a, b) => a + b, 0) /
+              this.missLatencies.length
+            : 0,
       };
     } catch (error) {
       this.logger.error(
@@ -439,9 +436,7 @@ export class CacheService implements OnModuleDestroy {
     try {
       return await this.backend.health();
     } catch (error) {
-      this.logger.error(
-        `Cache health check failed: ${error.message}`,
-      );
+      this.logger.error(`Cache health check failed: ${error.message}`);
       return false;
     }
   }
@@ -470,7 +465,10 @@ export class CacheService implements OnModuleDestroy {
    * Cleanup on module destroy
    */
   async onModuleDestroy(): Promise<void> {
-    if (this.backend && typeof (this.backend as any).disconnect === 'function') {
+    if (
+      this.backend &&
+      typeof (this.backend as any).disconnect === "function"
+    ) {
       await (this.backend as any).disconnect();
     }
   }

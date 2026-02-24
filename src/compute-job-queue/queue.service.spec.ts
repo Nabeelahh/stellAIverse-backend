@@ -1,10 +1,10 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { getQueueToken } from '@nestjs/bull';
-import { Queue, Job } from 'bull';
-import { QueueService, ComputeJobData } from './queue.service';
-import { RetryPolicyService } from './retry-policy.service';
+import { Test, TestingModule } from "@nestjs/testing";
+import { getQueueToken } from "@nestjs/bull";
+import { Queue, Job } from "bull";
+import { QueueService, ComputeJobData } from "./queue.service";
+import { RetryPolicyService } from "./retry-policy.service";
 
-describe('QueueService', () => {
+describe("QueueService", () => {
   let service: QueueService;
   let computeQueue: Queue<ComputeJobData>;
   let deadLetterQueue: Queue<ComputeJobData>;
@@ -35,11 +35,11 @@ describe('QueueService', () => {
 
   const mockRetryPolicyService = {
     getPolicy: jest.fn((jobType: string) => {
-      if (jobType === 'batch-operation') {
+      if (jobType === "batch-operation") {
         return {
           maxAttempts: 5,
           backoff: {
-            type: 'exponential',
+            type: "exponential",
             delay: 1000,
           },
         };
@@ -48,7 +48,7 @@ describe('QueueService', () => {
       return {
         maxAttempts: 3,
         backoff: {
-          type: 'exponential',
+          type: "exponential",
           delay: 2000,
         },
       };
@@ -60,11 +60,11 @@ describe('QueueService', () => {
       providers: [
         QueueService,
         {
-          provide: getQueueToken('compute-jobs'),
+          provide: getQueueToken("compute-jobs"),
           useValue: mockComputeQueue,
         },
         {
-          provide: getQueueToken('dead-letter-queue'),
+          provide: getQueueToken("dead-letter-queue"),
           useValue: mockDeadLetterQueue,
         },
         {
@@ -75,22 +75,26 @@ describe('QueueService', () => {
     }).compile();
 
     service = module.get<QueueService>(QueueService);
-    computeQueue = module.get<Queue<ComputeJobData>>(getQueueToken('compute-jobs'));
-    deadLetterQueue = module.get<Queue<ComputeJobData>>(getQueueToken('dead-letter-queue'));
+    computeQueue = module.get<Queue<ComputeJobData>>(
+      getQueueToken("compute-jobs"),
+    );
+    deadLetterQueue = module.get<Queue<ComputeJobData>>(
+      getQueueToken("dead-letter-queue"),
+    );
 
     jest.clearAllMocks();
   });
 
-  describe('addComputeJob', () => {
-    it('should add a job to the compute queue', async () => {
+  describe("addComputeJob", () => {
+    it("should add a job to the compute queue", async () => {
       const jobData: ComputeJobData = {
-        type: 'test',
-        payload: { data: 'test' },
-        userId: 'user123',
+        type: "test",
+        payload: { data: "test" },
+        userId: "user123",
       };
 
       const mockJob = {
-        id: 'job123',
+        id: "job123",
         data: jobData,
       } as Job<ComputeJobData>;
 
@@ -100,28 +104,28 @@ describe('QueueService', () => {
 
       expect(result).toBe(mockJob);
       expect(mockComputeQueue.add).toHaveBeenCalledWith(
-        'test',
+        "test",
         jobData,
         expect.objectContaining({
           attempts: 3,
           backoff: {
-            type: 'exponential',
+            type: "exponential",
             delay: 2000,
           },
         }),
       );
     });
 
-    it('should apply priority and group key attributes', async () => {
+    it("should apply priority and group key attributes", async () => {
       const jobData: ComputeJobData = {
-        type: 'batch-operation',
+        type: "batch-operation",
         payload: { items: [1, 2, 3] },
         priority: 1,
-        groupKey: 'bulk-001',
+        groupKey: "bulk-001",
       };
 
       const mockJob = {
-        id: 'job-priority-1',
+        id: "job-priority-1",
         data: jobData,
       } as Job<ComputeJobData>;
 
@@ -130,11 +134,11 @@ describe('QueueService', () => {
       await service.addComputeJob(jobData);
 
       expect(mockComputeQueue.add).toHaveBeenCalledWith(
-        'batch-operation',
+        "batch-operation",
         expect.objectContaining({
-          groupKey: 'bulk-001',
+          groupKey: "bulk-001",
           metadata: expect.objectContaining({
-            groupKey: 'bulk-001',
+            groupKey: "bulk-001",
           }),
         }),
         expect.objectContaining({
@@ -143,14 +147,14 @@ describe('QueueService', () => {
       );
     });
 
-    it('should configure retries based on job type policy', async () => {
+    it("should configure retries based on job type policy", async () => {
       const jobData: ComputeJobData = {
-        type: 'batch-operation',
+        type: "batch-operation",
         payload: { items: [] },
       };
 
       const mockJob = {
-        id: 'job-retry-1',
+        id: "job-retry-1",
         data: jobData,
       } as Job<ComputeJobData>;
 
@@ -158,28 +162,30 @@ describe('QueueService', () => {
 
       await service.addComputeJob(jobData);
 
-      expect(mockRetryPolicyService.getPolicy).toHaveBeenCalledWith('batch-operation');
+      expect(mockRetryPolicyService.getPolicy).toHaveBeenCalledWith(
+        "batch-operation",
+      );
       expect(mockComputeQueue.add).toHaveBeenCalledWith(
-        'batch-operation',
+        "batch-operation",
         expect.any(Object),
         expect.objectContaining({
           attempts: 5,
           backoff: {
-            type: 'exponential',
+            type: "exponential",
             delay: 1000,
           },
         }),
       );
     });
 
-    it('should preserve priority ordering configuration (lower is higher priority)', async () => {
+    it("should preserve priority ordering configuration (lower is higher priority)", async () => {
       const highPriorityJob = {
-        id: 'job-high',
-        data: { type: 'batch-operation', payload: {}, priority: 1 },
+        id: "job-high",
+        data: { type: "batch-operation", payload: {}, priority: 1 },
       } as unknown as Job<ComputeJobData>;
       const lowPriorityJob = {
-        id: 'job-low',
-        data: { type: 'batch-operation', payload: {}, priority: 10 },
+        id: "job-low",
+        data: { type: "batch-operation", payload: {}, priority: 10 },
       } as unknown as Job<ComputeJobData>;
 
       mockComputeQueue.add
@@ -187,12 +193,12 @@ describe('QueueService', () => {
         .mockResolvedValueOnce(lowPriorityJob);
 
       await service.addComputeJob({
-        type: 'batch-operation',
+        type: "batch-operation",
         payload: {},
         priority: 1,
       });
       await service.addComputeJob({
-        type: 'batch-operation',
+        type: "batch-operation",
         payload: {},
         priority: 10,
       });
@@ -200,12 +206,14 @@ describe('QueueService', () => {
       const firstCallOptions = mockComputeQueue.add.mock.calls[0][2];
       const secondCallOptions = mockComputeQueue.add.mock.calls[1][2];
 
-      expect(firstCallOptions.priority).toBeLessThan(secondCallOptions.priority);
+      expect(firstCallOptions.priority).toBeLessThan(
+        secondCallOptions.priority,
+      );
     });
   });
 
-  describe('getQueueStats', () => {
-    it('should return queue statistics', async () => {
+  describe("getQueueStats", () => {
+    it("should return queue statistics", async () => {
       mockComputeQueue.getWaitingCount.mockResolvedValue(5);
       mockComputeQueue.getActiveCount.mockResolvedValue(3);
       mockComputeQueue.getCompletedCount.mockResolvedValue(100);
@@ -230,9 +238,9 @@ describe('QueueService', () => {
     });
   });
 
-  describe('isRedisHealthy', () => {
-    it('should return true when Redis ping succeeds', async () => {
-      mockComputeQueue.client.ping.mockResolvedValue('PONG');
+  describe("isRedisHealthy", () => {
+    it("should return true when Redis ping succeeds", async () => {
+      mockComputeQueue.client.ping.mockResolvedValue("PONG");
 
       const result = await service.isRedisHealthy();
 
@@ -240,15 +248,17 @@ describe('QueueService', () => {
       expect(mockComputeQueue.client.ping).toHaveBeenCalled();
     });
 
-    it('should return false when Redis ping fails', async () => {
-      mockComputeQueue.client.ping.mockRejectedValue(new Error('Connection failed'));
+    it("should return false when Redis ping fails", async () => {
+      mockComputeQueue.client.ping.mockRejectedValue(
+        new Error("Connection failed"),
+      );
 
       const result = await service.isRedisHealthy();
 
       expect(result).toBe(false);
     });
 
-    it('should return false when client is null', async () => {
+    it("should return false when client is null", async () => {
       mockComputeQueue.client = null;
 
       const result = await service.isRedisHealthy();
@@ -257,15 +267,15 @@ describe('QueueService', () => {
     });
   });
 
-  describe('addDelayedJob', () => {
-    it('should add a delayed job', async () => {
+  describe("addDelayedJob", () => {
+    it("should add a delayed job", async () => {
       const jobData: ComputeJobData = {
-        type: 'delayed-test',
-        payload: { data: 'test' },
+        type: "delayed-test",
+        payload: { data: "test" },
       };
 
       const mockJob = {
-        id: 'job456',
+        id: "job456",
         data: jobData,
       } as Job<ComputeJobData>;
 
@@ -275,42 +285,42 @@ describe('QueueService', () => {
 
       expect(result).toBe(mockJob);
       expect(mockComputeQueue.add).toHaveBeenCalledWith(
-        'delayed-test',
+        "delayed-test",
         jobData,
         expect.objectContaining({ delay: 5000 }),
       );
     });
   });
 
-  describe('getJob', () => {
-    it('should return a job by ID', async () => {
-      const mockJob = { id: 'job123' } as Job<ComputeJobData>;
+  describe("getJob", () => {
+    it("should return a job by ID", async () => {
+      const mockJob = { id: "job123" } as Job<ComputeJobData>;
       mockComputeQueue.getJob.mockResolvedValue(mockJob);
 
-      const result = await service.getJob('job123');
+      const result = await service.getJob("job123");
 
       expect(result).toBe(mockJob);
-      expect(mockComputeQueue.getJob).toHaveBeenCalledWith('job123');
+      expect(mockComputeQueue.getJob).toHaveBeenCalledWith("job123");
     });
   });
 
-  describe('removeJob', () => {
-    it('should remove a job', async () => {
+  describe("removeJob", () => {
+    it("should remove a job", async () => {
       const mockJob = {
-        id: 'job123',
+        id: "job123",
         remove: jest.fn().mockResolvedValue(undefined),
       } as unknown as Job<ComputeJobData>;
 
       mockComputeQueue.getJob.mockResolvedValue(mockJob);
 
-      await service.removeJob('job123');
+      await service.removeJob("job123");
 
       expect(mockJob.remove).toHaveBeenCalled();
     });
   });
 
-  describe('pauseQueue', () => {
-    it('should pause the queue', async () => {
+  describe("pauseQueue", () => {
+    it("should pause the queue", async () => {
       mockComputeQueue.pause.mockResolvedValue(undefined);
 
       await service.pauseQueue();
@@ -319,8 +329,8 @@ describe('QueueService', () => {
     });
   });
 
-  describe('resumeQueue', () => {
-    it('should resume the queue', async () => {
+  describe("resumeQueue", () => {
+    it("should resume the queue", async () => {
       mockComputeQueue.resume.mockResolvedValue(undefined);
 
       await service.resumeQueue();

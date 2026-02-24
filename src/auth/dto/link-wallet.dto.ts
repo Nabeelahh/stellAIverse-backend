@@ -1,4 +1,4 @@
-import { IsString, IsEthereumAddress, Length } from 'class-validator';
+import { IsString, IsEthereumAddress, Length } from "class-validator";
 
 export class LinkWalletDto {
   @IsEthereumAddress()

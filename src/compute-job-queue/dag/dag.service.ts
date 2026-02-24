@@ -3,10 +3,10 @@ import {
   Logger,
   BadRequestException,
   NotFoundException,
-} from '@nestjs/common';
-import { EventEmitter2 } from '@nestjs/event-emitter';
-import { QueueService, ComputeJobData } from '../queue.service';
-import { DagValidator } from './dag.validator';
+} from "@nestjs/common";
+import { EventEmitter2 } from "@nestjs/event-emitter";
+import { QueueService, ComputeJobData } from "../queue.service";
+import { DagValidator } from "./dag.validator";
 import {
   DagDependency,
   DagJobContext,
@@ -16,8 +16,8 @@ import {
   DagWorkflow,
   DagWorkflowStatus,
   DependencyCondition,
-} from './dag.interfaces';
-import { CreateDagWorkflowDto } from './dag.dto';
+} from "./dag.interfaces";
+import { CreateDagWorkflowDto } from "./dag.dto";
 
 /**
  * Orchestrates DAG-based job workflows.
@@ -76,7 +76,7 @@ export class DagService {
     const validation = this.dagValidator.validate(depMap);
     if (!validation.valid) {
       throw new BadRequestException({
-        message: 'Invalid DAG structure',
+        message: "Invalid DAG structure",
         errors: validation.errors,
       });
     }
@@ -130,9 +130,7 @@ export class DagService {
     };
 
     this.workflows.set(workflowId, workflow);
-    this.logger.log(
-      `Workflow ${workflowId} created with ${nodes.size} nodes`,
-    );
+    this.logger.log(`Workflow ${workflowId} created with ${nodes.size} nodes`);
 
     // Enqueue root nodes (no dependencies).
     const readyJobs = this.resolveReadyJobs(workflow);
@@ -268,7 +266,7 @@ export class DagService {
 
   private registerEventListeners(): void {
     this.eventEmitter.on(
-      'dag.job.completed',
+      "dag.job.completed",
       (event: { workflowId: string; nodeId: string; result: any }) => {
         this.handleNodeCompletion(
           event.workflowId,
@@ -284,7 +282,7 @@ export class DagService {
     );
 
     this.eventEmitter.on(
-      'dag.job.failed',
+      "dag.job.failed",
       (event: { workflowId: string; nodeId: string; error: string }) => {
         this.handleNodeFailure(
           event.workflowId,
@@ -317,9 +315,7 @@ export class DagService {
     node.status = DagNodeStatus.COMPLETED;
     node.result = result;
 
-    this.logger.log(
-      `Node "${nodeId}" in workflow ${workflowId} completed`,
-    );
+    this.logger.log(`Node "${nodeId}" in workflow ${workflowId} completed`);
 
     await this.advanceWorkflow(workflow);
   }
@@ -442,7 +438,7 @@ export class DagService {
       `Workflow ${workflow.workflowId} finalized as ${workflow.status}`,
     );
 
-    this.eventEmitter.emit('dag.workflow.completed', {
+    this.eventEmitter.emit("dag.workflow.completed", {
       workflowId: workflow.workflowId,
       status: workflow.status,
     });

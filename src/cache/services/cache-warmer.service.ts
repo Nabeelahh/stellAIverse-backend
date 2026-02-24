@@ -1,7 +1,7 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { CacheService } from '../cache.service';
-import { EventEmitter2 } from '@nestjs/event-emitter';
-import { CacheConfigDto } from '../dto/cache-config.dto';
+import { Injectable, Logger } from "@nestjs/common";
+import { CacheService } from "../cache.service";
+import { EventEmitter2 } from "@nestjs/event-emitter";
+import { CacheConfigDto } from "../dto/cache-config.dto";
 
 export interface CacheWarmingJob {
   jobType: string;
@@ -13,7 +13,7 @@ export interface CacheWarmingJob {
 
 export interface CacheWarmingRequest {
   jobs: CacheWarmingJob[];
-  priority?: 'high' | 'normal' | 'low';
+  priority?: "high" | "normal" | "low";
 }
 
 export interface CacheWarmingResult {
@@ -44,14 +44,14 @@ export class CacheWarmerService {
     const warmingId = `warming-${Date.now()}`;
 
     if (this.warmingInProgress.has(warmingId)) {
-      throw new Error('Cache warming already in progress for this batch');
+      throw new Error("Cache warming already in progress for this batch");
     }
 
     this.warmingInProgress.set(warmingId, true);
 
     try {
       this.logger.log(
-        `Starting cache warming with ${request.jobs.length} jobs (priority: ${request.priority || 'normal'})`,
+        `Starting cache warming with ${request.jobs.length} jobs (priority: ${request.priority || "normal"})`,
       );
 
       const cacheKeys: string[] = [];
@@ -61,7 +61,7 @@ export class CacheWarmerService {
       // Process jobs based on priority
       const sortedJobs = this.sortJobsByPriority(
         request.jobs,
-        request.priority || 'normal',
+        request.priority || "normal",
       );
 
       for (const job of sortedJobs) {
@@ -96,7 +96,7 @@ export class CacheWarmerService {
       );
 
       // Emit event
-      this.eventEmitter.emit('cache.warming.completed', {
+      this.eventEmitter.emit("cache.warming.completed", {
         warmingId,
         totalJobs: request.jobs.length,
         successCount,
@@ -185,7 +185,7 @@ export class CacheWarmerService {
     return {
       ttl: 24 * 60 * 60 * 1000, // 24 hours
       batchSize: 100, // Process 100 jobs at a time
-      priority: 'normal',
+      priority: "normal",
     };
   }
 }

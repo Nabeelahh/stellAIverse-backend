@@ -1,14 +1,14 @@
-import { MigrationInterface, QueryRunner, TableColumn } from 'typeorm';
+import { MigrationInterface, QueryRunner, TableColumn } from "typeorm";
 
 export class AddUserRoleColumn1708600000000 implements MigrationInterface {
-  name = 'AddUserRoleColumn1708600000000';
+  name = "AddUserRoleColumn1708600000000";
 
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.addColumn(
-      'users',
+      "users",
       new TableColumn({
-        name: 'role',
-        type: 'varchar',
+        name: "role",
+        type: "varchar",
         default: "'user'",
         isNullable: false,
       }),
@@ -16,6 +16,6 @@ export class AddUserRoleColumn1708600000000 implements MigrationInterface {
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
-    await queryRunner.dropColumn('users', 'role');
+    await queryRunner.dropColumn("users", "role");
   }
 }

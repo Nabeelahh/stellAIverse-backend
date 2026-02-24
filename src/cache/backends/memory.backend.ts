@@ -1,7 +1,10 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { CacheEntry, CacheVersionDto } from '../dto/cache-config.dto';
-import { ICacheStorage, CacheStorageConfig } from '../interfaces/cache-storage.interface';
-import { CacheUtils } from '../utils/cache.utils';
+import { Injectable, Logger } from "@nestjs/common";
+import { CacheEntry, CacheVersionDto } from "../dto/cache-config.dto";
+import {
+  ICacheStorage,
+  CacheStorageConfig,
+} from "../interfaces/cache-storage.interface";
+import { CacheUtils } from "../utils/cache.utils";
 
 interface MemoryCacheItem<T> {
   entry: CacheEntry<T>;
@@ -41,7 +44,9 @@ export class MemoryCacheBackend implements ICacheStorage {
     }
 
     if (cleaned > 0) {
-      this.logger.debug(`Memory cache cleanup: removed ${cleaned} expired entries`);
+      this.logger.debug(
+        `Memory cache cleanup: removed ${cleaned} expired entries`,
+      );
     }
   }
 
@@ -105,7 +110,7 @@ export class MemoryCacheBackend implements ICacheStorage {
 
   async getByPattern<T>(pattern: string): Promise<CacheEntry<T>[]> {
     const entries: CacheEntry<T>[] = [];
-    const regex = new RegExp(pattern.replace(/\*/g, '.*'));
+    const regex = new RegExp(pattern.replace(/\*/g, ".*"));
     const now = Date.now();
 
     for (const [key, item] of this.store.entries()) {
@@ -169,7 +174,8 @@ export class MemoryCacheBackend implements ICacheStorage {
     }
 
     const entryCount = this.store.size;
-    const avgEntrySize = entryCount > 0 ? Math.round(totalSize / entryCount) : 0;
+    const avgEntrySize =
+      entryCount > 0 ? Math.round(totalSize / entryCount) : 0;
 
     return {
       size: totalSize,
@@ -227,6 +233,6 @@ export class MemoryCacheBackend implements ICacheStorage {
     if (this.cleanupInterval) {
       clearInterval(this.cleanupInterval);
     }
-    this.logger.log('Memory cache backend disconnected');
+    this.logger.log("Memory cache backend disconnected");
   }
 }

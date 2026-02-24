@@ -1,9 +1,12 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { EnvironmentConfigService } from './config/environment-config.service';
-import { SimulationStateManager } from './state/simulation-state.manager';
-import { AgentExecutor } from './executors/agent.executor';
-import { SimulationConfig, SimulationResult } from './interfaces/simulation.interface';
-import { MockProviderFactory } from './providers/mock-provider.factory';
+import { Injectable, Logger } from "@nestjs/common";
+import { EnvironmentConfigService } from "./config/environment-config.service";
+import { SimulationStateManager } from "./state/simulation-state.manager";
+import { AgentExecutor } from "./executors/agent.executor";
+import {
+  SimulationConfig,
+  SimulationResult,
+} from "./interfaces/simulation.interface";
+import { MockProviderFactory } from "./providers/mock-provider.factory";
 
 @Injectable()
 export class SimulatorService {
@@ -24,13 +27,13 @@ export class SimulatorService {
 
     // Set up deterministic environment
     await this.envConfig.configure(config);
-    
+
     // Initialize mock providers with seed
     await this.mockProviderFactory.initializeProviders(config.seed);
-    
+
     // Create new simulation state
     const simulationId = await this.stateManager.createSimulation(config);
-    
+
     this.logger.log(`Simulation ${simulationId} initialized successfully`);
     return simulationId;
   }
@@ -53,10 +56,10 @@ export class SimulatorService {
     while (stepCount < maxSteps && !state.completed) {
       // Execute one simulation step
       const stepResult = await this.agentExecutor.executeStep(simulationId);
-      
+
       // Update simulation state
       await this.stateManager.recordStep(simulationId, stepResult);
-      
+
       stepCount++;
 
       // Check termination conditions
@@ -76,7 +79,9 @@ export class SimulatorService {
       liveSubmissions: 0, // Always 0 in simulation mode
     };
 
-    this.logger.log(`Simulation ${simulationId} completed in ${stepCount} steps`);
+    this.logger.log(
+      `Simulation ${simulationId} completed in ${stepCount} steps`,
+    );
     return result;
   }
 
@@ -98,7 +103,10 @@ export class SimulatorService {
   /**
    * Verify simulation reproducibility
    */
-  async verifyReproducibility(config: SimulationConfig, runs: number = 2): Promise<boolean> {
+  async verifyReproducibility(
+    config: SimulationConfig,
+    runs: number = 2,
+  ): Promise<boolean> {
     const results: string[] = [];
 
     for (let i = 0; i < runs; i++) {
@@ -108,9 +116,11 @@ export class SimulatorService {
     }
 
     // All results should be identical for same seed
-    const allIdentical = results.every(r => r === results[0]);
-    this.logger.log(`Reproducibility check: ${allIdentical ? 'PASSED' : 'FAILED'}`);
-    
+    const allIdentical = results.every((r) => r === results[0]);
+    this.logger.log(
+      `Reproducibility check: ${allIdentical ? "PASSED" : "FAILED"}`,
+    );
+
     return allIdentical;
   }
 }

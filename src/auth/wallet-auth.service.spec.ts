@@ -1,22 +1,22 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { WalletAuthService } from './wallet-auth.service';
-import { ChallengeService } from './challenge.service';
-import { JwtService } from '@nestjs/jwt';
-import { getRepositoryToken } from '@nestjs/typeorm';
-import { User, UserRole } from '../user/entities/user.entity';
-import { Repository } from 'typeorm';
+import { Test, TestingModule } from "@nestjs/testing";
+import { WalletAuthService } from "./wallet-auth.service";
+import { ChallengeService } from "./challenge.service";
+import { JwtService } from "@nestjs/jwt";
+import { getRepositoryToken } from "@nestjs/typeorm";
+import { User, UserRole } from "../user/entities/user.entity";
+import { Repository } from "typeorm";
 import {
   UnauthorizedException,
   BadRequestException,
   ConflictException,
-} from '@nestjs/common';
+} from "@nestjs/common";
 
 // Mock ethers
-jest.mock('ethers', () => ({
+jest.mock("ethers", () => ({
   verifyMessage: jest.fn(),
 }));
 
-describe('WalletAuthService', () => {
+describe("WalletAuthService", () => {
   let service: WalletAuthService;
   let challengeService: ChallengeService;
   let jwtService: JwtService;
@@ -24,9 +24,9 @@ describe('WalletAuthService', () => {
   let verifyMessage: jest.Mock;
 
   const mockUser: User = {
-    id: '123',
-    walletAddress: '0x1234567890abcdef1234567890abcdef12345678',
-    email: 'test@example.com',
+    id: "123",
+    walletAddress: "0x1234567890abcdef1234567890abcdef12345678",
+    email: "test@example.com",
     emailVerified: true,
     role: UserRole.USER,
     createdAt: new Date(),
@@ -52,7 +52,7 @@ describe('WalletAuthService', () => {
 
   beforeEach(async () => {
     // Get the mocked verifyMessage
-    verifyMessage = require('ethers').verifyMessage;
+    verifyMessage = require("ethers").verifyMessage;
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -80,18 +80,18 @@ describe('WalletAuthService', () => {
     jest.clearAllMocks();
   });
 
-  it('should be defined', () => {
+  it("should be defined", () => {
     expect(service).toBeDefined();
   });
 
-  describe('linkWallet', () => {
-    const currentAddress = '0x1234567890abcdef1234567890abcdef12345678';
-    const newAddress = '0xabcdefabcdefabcdefabcdefabcdefabcdefabcd';
-    const message = 'Sign this message to prove ownership';
-    const signature = '0x' + '1'.repeat(130);
-    const challengeId = 'challenge-123';
+  describe("linkWallet", () => {
+    const currentAddress = "0x1234567890abcdef1234567890abcdef12345678";
+    const newAddress = "0xabcdefabcdefabcdefabcdefabcdefabcdefabcd";
+    const message = "Sign this message to prove ownership";
+    const signature = "0x" + "1".repeat(130);
+    const challengeId = "challenge-123";
 
-    it('should successfully link a new wallet', async () => {
+    it("should successfully link a new wallet", async () => {
       mockChallengeService.extractChallengeId.mockReturnValue(challengeId);
       mockChallengeService.consumeChallenge.mockReturnValue({
         address: newAddress.toLowerCase(),
@@ -113,12 +113,12 @@ describe('WalletAuthService', () => {
         signature,
       );
 
-      expect(result.message).toBe('Wallet successfully linked');
+      expect(result.message).toBe("Wallet successfully linked");
       expect(result.walletAddress).toBe(newAddress.toLowerCase());
       expect(mockUserRepository.save).toHaveBeenCalled();
     });
 
-    it('should throw ConflictException if new wallet is already in use', async () => {
+    it("should throw ConflictException if new wallet is already in use", async () => {
       mockChallengeService.extractChallengeId.mockReturnValue(challengeId);
       mockChallengeService.consumeChallenge.mockReturnValue({
         address: newAddress.toLowerCase(),
@@ -132,7 +132,7 @@ describe('WalletAuthService', () => {
       ).rejects.toThrow(ConflictException);
     });
 
-    it('should throw UnauthorizedException for invalid challenge', async () => {
+    it("should throw UnauthorizedException for invalid challenge", async () => {
       mockChallengeService.extractChallengeId.mockReturnValue(null);
 
       await expect(
@@ -140,7 +140,7 @@ describe('WalletAuthService', () => {
       ).rejects.toThrow(UnauthorizedException);
     });
 
-    it('should throw BadRequestException if current user not found', async () => {
+    it("should throw BadRequestException if current user not found", async () => {
       mockChallengeService.extractChallengeId.mockReturnValue(challengeId);
       mockChallengeService.consumeChallenge.mockReturnValue({
         address: newAddress.toLowerCase(),
@@ -157,21 +157,21 @@ describe('WalletAuthService', () => {
     });
   });
 
-  describe('unlinkWallet', () => {
-    const walletAddress = '0x1234567890abcdef1234567890abcdef12345678';
+  describe("unlinkWallet", () => {
+    const walletAddress = "0x1234567890abcdef1234567890abcdef12345678";
 
-    it('should successfully unlink wallet with verified email', async () => {
+    it("should successfully unlink wallet with verified email", async () => {
       mockUserRepository.findOne.mockResolvedValue(mockUser);
 
       const result = await service.unlinkWallet(walletAddress, walletAddress);
 
-      expect(result.message).toContain('Wallet unlink requested');
+      expect(result.message).toContain("Wallet unlink requested");
       expect(mockUserRepository.findOne).toHaveBeenCalledWith({
         where: { walletAddress: walletAddress.toLowerCase() },
       });
     });
 
-    it('should throw BadRequestException if email not verified', async () => {
+    it("should throw BadRequestException if email not verified", async () => {
       const unverifiedUser = { ...mockUser, emailVerified: false };
       mockUserRepository.findOne.mockResolvedValue(unverifiedUser);
 
@@ -180,15 +180,15 @@ describe('WalletAuthService', () => {
       ).rejects.toThrow(BadRequestException);
     });
 
-    it('should throw BadRequestException if addresses do not match', async () => {
-      const differentAddress = '0xabcdefabcdefabcdefabcdefabcdefabcdefabcd';
+    it("should throw BadRequestException if addresses do not match", async () => {
+      const differentAddress = "0xabcdefabcdefabcdefabcdefabcdefabcdefabcd";
 
       await expect(
         service.unlinkWallet(walletAddress, differentAddress),
       ).rejects.toThrow(BadRequestException);
     });
 
-    it('should throw BadRequestException if user not found', async () => {
+    it("should throw BadRequestException if user not found", async () => {
       mockUserRepository.findOne.mockResolvedValue(null);
 
       await expect(
@@ -196,7 +196,7 @@ describe('WalletAuthService', () => {
       ).rejects.toThrow(BadRequestException);
     });
 
-    it('should throw BadRequestException if email is null', async () => {
+    it("should throw BadRequestException if email is null", async () => {
       const noEmailUser = { ...mockUser, email: null, emailVerified: false };
       mockUserRepository.findOne.mockResolvedValue(noEmailUser);
 
@@ -206,12 +206,12 @@ describe('WalletAuthService', () => {
     });
   });
 
-  describe('recoverWallet', () => {
-    const email = 'test@example.com';
-    const recoveryToken = 'a'.repeat(64);
-    const challengeMessage = 'Sign this challenge';
+  describe("recoverWallet", () => {
+    const email = "test@example.com";
+    const recoveryToken = "a".repeat(64);
+    const challengeMessage = "Sign this challenge";
 
-    it('should successfully initiate wallet recovery', async () => {
+    it("should successfully initiate wallet recovery", async () => {
       mockUserRepository.findOne.mockResolvedValue(mockUser);
       mockChallengeService.issueChallengeForAddress.mockReturnValue(
         challengeMessage,
@@ -219,38 +219,38 @@ describe('WalletAuthService', () => {
 
       const result = await service.recoverWallet(email, recoveryToken);
 
-      expect(result.message).toContain('Recovery initiated');
+      expect(result.message).toContain("Recovery initiated");
       expect(result.walletAddress).toBe(mockUser.walletAddress);
       expect(result.challenge).toBe(challengeMessage);
-      expect(mockChallengeService.issueChallengeForAddress).toHaveBeenCalledWith(
-        mockUser.walletAddress,
-      );
+      expect(
+        mockChallengeService.issueChallengeForAddress,
+      ).toHaveBeenCalledWith(mockUser.walletAddress);
       expect(mockUserRepository.findOne).toHaveBeenCalledWith({
         where: { email: email.toLowerCase(), emailVerified: true },
       });
     });
 
-    it('should throw BadRequestException if user not found', async () => {
+    it("should throw BadRequestException if user not found", async () => {
       mockUserRepository.findOne.mockResolvedValue(null);
 
-      await expect(
-        service.recoverWallet(email, recoveryToken),
-      ).rejects.toThrow(BadRequestException);
+      await expect(service.recoverWallet(email, recoveryToken)).rejects.toThrow(
+        BadRequestException,
+      );
     });
 
-    it('should throw BadRequestException if email not verified', async () => {
+    it("should throw BadRequestException if email not verified", async () => {
       const unverifiedUser = { ...mockUser, emailVerified: false };
       mockUserRepository.findOne.mockResolvedValue(null); // Query filters by emailVerified: true
 
-      await expect(
-        service.recoverWallet(email, recoveryToken),
-      ).rejects.toThrow(BadRequestException);
+      await expect(service.recoverWallet(email, recoveryToken)).rejects.toThrow(
+        BadRequestException,
+      );
     });
   });
 
-  describe('validateToken', () => {
-    it('should successfully validate a valid token', () => {
-      const token = 'valid.jwt.token';
+  describe("validateToken", () => {
+    it("should successfully validate a valid token", () => {
+      const token = "valid.jwt.token";
       const payload = {
         address: mockUser.walletAddress,
         email: mockUser.email,
@@ -265,15 +265,13 @@ describe('WalletAuthService', () => {
       expect(mockJwtService.verify).toHaveBeenCalledWith(token);
     });
 
-    it('should throw UnauthorizedException for invalid token', () => {
-      const token = 'invalid.token';
+    it("should throw UnauthorizedException for invalid token", () => {
+      const token = "invalid.token";
       mockJwtService.verify.mockImplementation(() => {
-        throw new Error('Invalid token');
+        throw new Error("Invalid token");
       });
 
-      expect(() => service.validateToken(token)).toThrow(
-        UnauthorizedException,
-      );
+      expect(() => service.validateToken(token)).toThrow(UnauthorizedException);
     });
   });
 });

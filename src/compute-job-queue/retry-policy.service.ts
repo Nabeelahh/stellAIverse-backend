@@ -1,8 +1,8 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
+import { Injectable, Logger } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
 
 export interface RetryBackoffPolicy {
-  type: 'fixed' | 'exponential' | 'linear' | 'custom';
+  type: "fixed" | "exponential" | "linear" | "custom";
   delay: number;
   factor?: number; // For exponential backoff
   maxDelay?: number; // Maximum delay cap
@@ -25,7 +25,7 @@ export class RetryPolicyService {
   private readonly defaultPolicy: RetryPolicy = {
     maxAttempts: 3,
     backoff: {
-      type: 'exponential',
+      type: "exponential",
       delay: 2000,
       factor: 2,
       maxDelay: 30000, // 30 seconds max
@@ -34,34 +34,34 @@ export class RetryPolicyService {
   };
 
   private readonly defaultTypePolicies: Record<string, RetryPolicy> = {
-    'email-notification': {
+    "email-notification": {
       maxAttempts: 2,
-      backoff: { type: 'fixed', delay: 1000 },
+      backoff: { type: "fixed", delay: 1000 },
       jitter: false,
     },
-    'batch-operation': {
+    "batch-operation": {
       maxAttempts: 5,
-      backoff: { 
-        type: 'exponential', 
+      backoff: {
+        type: "exponential",
         delay: 1000,
         factor: 1.5,
         maxDelay: 60000, // 1 minute max
       },
       jitter: true,
     },
-    'data-processing': {
+    "data-processing": {
       maxAttempts: 3,
-      backoff: { 
-        type: 'linear', 
+      backoff: {
+        type: "linear",
         delay: 2000,
         maxDelay: 10000, // 10 seconds max
       },
       jitter: true,
     },
-    'ai-computation': {
+    "ai-computation": {
       maxAttempts: 4,
-      backoff: { 
-        type: 'exponential', 
+      backoff: {
+        type: "exponential",
         delay: 3000,
         factor: 2,
         maxDelay: 120000, // 2 minutes max
@@ -79,7 +79,8 @@ export class RetryPolicyService {
   getPolicy(jobType: string): RetryPolicy {
     return {
       ...this.defaultPolicy,
-      ...(this.configuredPolicies[jobType] || this.defaultTypePolicies[jobType]),
+      ...(this.configuredPolicies[jobType] ||
+        this.defaultTypePolicies[jobType]),
     };
   }
 
@@ -90,24 +91,24 @@ export class RetryPolicyService {
     let delay: number;
 
     switch (policy.backoff.type) {
-      case 'fixed':
+      case "fixed":
         delay = policy.backoff.delay;
         break;
-      
-      case 'linear':
+
+      case "linear":
         delay = policy.backoff.delay * attemptNumber;
         break;
-      
-      case 'exponential':
+
+      case "exponential":
         const factor = policy.backoff.factor || 2;
         delay = policy.backoff.delay * Math.pow(factor, attemptNumber - 1);
         break;
-      
-      case 'custom':
+
+      case "custom":
         // For custom backoff, use the base delay with multiplier
         delay = policy.backoff.delay * attemptNumber;
         break;
-      
+
       default:
         delay = policy.backoff.delay;
     }
@@ -135,7 +136,12 @@ export class RetryPolicyService {
   /**
    * Determine if a job should be retried based on the error and policy
    */
-  shouldRetry(jobType: string, error: Error, attemptNumber: number, maxAttempts: number): boolean {
+  shouldRetry(
+    jobType: string,
+    error: Error,
+    attemptNumber: number,
+    maxAttempts: number,
+  ): boolean {
     const policy = this.getPolicy(jobType);
 
     // Don't retry if max attempts reached
@@ -150,24 +156,23 @@ export class RetryPolicyService {
 
     // Default retry logic - don't retry for certain error types
     const nonRetryableErrors = [
-      'ValidationError',
-      'AuthenticationError',
-      'BadRequestError',
-      'UnauthorizedError',
-      'NotFoundError',
-      'Email recipient is required',
+      "ValidationError",
+      "AuthenticationError",
+      "BadRequestError",
+      "UnauthorizedError",
+      "NotFoundError",
+      "Email recipient is required",
     ];
 
     const isNonRetryable = nonRetryableErrors.some(
-      (errType) =>
-        error.name === errType || error.message.includes(errType),
+      (errType) => error.name === errType || error.message.includes(errType),
     );
 
     return !isNonRetryable;
   }
 
   private loadConfiguredPolicies(): Record<string, RetryPolicy> {
-    const raw = this.configService.get<string>('COMPUTE_JOB_RETRY_POLICIES');
+    const raw = this.configService.get<string>("COMPUTE_JOB_RETRY_POLICIES");
     if (!raw) {
       return {};
     }
@@ -205,7 +210,7 @@ export class RetryPolicyService {
     }
 
     if (
-      !['fixed', 'exponential', 'linear', 'custom'].includes(backoffType) ||
+      !["fixed", "exponential", "linear", "custom"].includes(backoffType) ||
       !Number.isFinite(backoffDelay) ||
       backoffDelay < 0
     ) {
@@ -232,7 +237,7 @@ export class RetryPolicyService {
       normalizedPolicy.minDelay = minDelay;
     }
 
-    if (typeof policy.jitter === 'boolean') {
+    if (typeof policy.jitter === "boolean") {
       normalizedPolicy.jitter = policy.jitter;
     }
 

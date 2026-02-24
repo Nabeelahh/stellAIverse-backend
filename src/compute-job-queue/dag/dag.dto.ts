@@ -9,22 +9,26 @@ import {
   Min,
   Max,
   ArrayMinSize,
-} from 'class-validator';
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { Type } from 'class-transformer';
-import { DependencyCondition, DagNodeStatus, DagWorkflowStatus } from './dag.interfaces';
+} from "class-validator";
+import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
+import { Type } from "class-transformer";
+import {
+  DependencyCondition,
+  DagNodeStatus,
+  DagWorkflowStatus,
+} from "./dag.interfaces";
 
 /** Describes a single dependency edge in the request payload. */
 export class DagDependencyDto {
   @ApiProperty({
-    description: 'ID of the upstream job this node depends on',
-    example: 'extract-data',
+    description: "ID of the upstream job this node depends on",
+    example: "extract-data",
   })
   @IsString()
   jobId: string;
 
   @ApiPropertyOptional({
-    description: 'Condition under which the dependent job should run',
+    description: "Condition under which the dependent job should run",
     enum: DependencyCondition,
     default: DependencyCondition.ON_SUCCESS,
     example: DependencyCondition.ON_SUCCESS,
@@ -37,36 +41,36 @@ export class DagDependencyDto {
 /** Describes a single node (job) within the workflow submission. */
 export class CreateDagNodeDto {
   @ApiProperty({
-    description: 'Unique job identifier within the workflow',
-    example: 'extract-data',
+    description: "Unique job identifier within the workflow",
+    example: "extract-data",
   })
   @IsString()
   jobId: string;
 
   @ApiProperty({
-    description: 'Job type routed to the processor',
-    example: 'data-processing',
+    description: "Job type routed to the processor",
+    example: "data-processing",
   })
   @IsString()
   type: string;
 
   @ApiProperty({
-    description: 'Job payload data',
-    example: { source: 's3://bucket/raw-data.csv' },
+    description: "Job payload data",
+    example: { source: "s3://bucket/raw-data.csv" },
   })
   @IsObject()
   payload: any;
 
   @ApiPropertyOptional({
-    description: 'User ID who owns this job',
-    example: 'user-123',
+    description: "User ID who owns this job",
+    example: "user-123",
   })
   @IsOptional()
   @IsString()
   userId?: string;
 
   @ApiPropertyOptional({
-    description: 'Queue priority (lower = higher priority)',
+    description: "Queue priority (lower = higher priority)",
     example: 5,
     minimum: 1,
     maximum: 100,
@@ -78,15 +82,15 @@ export class CreateDagNodeDto {
   priority?: number;
 
   @ApiPropertyOptional({
-    description: 'Grouping key for correlation',
-    example: 'ml-pipeline-run-42',
+    description: "Grouping key for correlation",
+    example: "ml-pipeline-run-42",
   })
   @IsOptional()
   @IsString()
   groupKey?: string;
 
   @ApiPropertyOptional({
-    description: 'Additional metadata forwarded to the job',
+    description: "Additional metadata forwarded to the job",
     example: { retries: 2 },
   })
   @IsOptional()
@@ -94,9 +98,9 @@ export class CreateDagNodeDto {
   metadata?: Record<string, any>;
 
   @ApiPropertyOptional({
-    description: 'Upstream dependencies with optional conditions',
+    description: "Upstream dependencies with optional conditions",
     type: [DagDependencyDto],
-    example: [{ jobId: 'extract-data', condition: 'onSuccess' }],
+    example: [{ jobId: "extract-data", condition: "onSuccess" }],
   })
   @IsOptional()
   @IsArray()
@@ -108,15 +112,15 @@ export class CreateDagNodeDto {
 /** Top-level request body to submit a DAG workflow. */
 export class CreateDagWorkflowDto {
   @ApiPropertyOptional({
-    description: 'Human-readable workflow name',
-    example: 'ML Training Pipeline',
+    description: "Human-readable workflow name",
+    example: "ML Training Pipeline",
   })
   @IsOptional()
   @IsString()
   name?: string;
 
   @ApiProperty({
-    description: 'Nodes (jobs) that compose the workflow',
+    description: "Nodes (jobs) that compose the workflow",
     type: [CreateDagNodeDto],
   })
   @IsArray()
@@ -126,16 +130,16 @@ export class CreateDagWorkflowDto {
   nodes: CreateDagNodeDto[];
 
   @ApiPropertyOptional({
-    description: 'User ID who submitted the workflow',
-    example: 'user-123',
+    description: "User ID who submitted the workflow",
+    example: "user-123",
   })
   @IsOptional()
   @IsString()
   userId?: string;
 
   @ApiPropertyOptional({
-    description: 'Workflow-level metadata',
-    example: { environment: 'staging' },
+    description: "Workflow-level metadata",
+    example: { environment: "staging" },
   })
   @IsOptional()
   @IsObject()
@@ -147,10 +151,10 @@ export class CreateDagWorkflowDto {
 // ---------------------------------------------------------------------------
 
 export class DagNodeResponseDto {
-  @ApiProperty({ example: 'extract-data' })
+  @ApiProperty({ example: "extract-data" })
   jobId: string;
 
-  @ApiProperty({ example: 'data-processing' })
+  @ApiProperty({ example: "data-processing" })
   type: string;
 
   @ApiProperty({ enum: DagNodeStatus, example: DagNodeStatus.PENDING })
@@ -170,10 +174,10 @@ export class DagNodeResponseDto {
 }
 
 export class DagWorkflowResponseDto {
-  @ApiProperty({ example: 'wf-abc123' })
+  @ApiProperty({ example: "wf-abc123" })
   workflowId: string;
 
-  @ApiPropertyOptional({ example: 'ML Training Pipeline' })
+  @ApiPropertyOptional({ example: "ML Training Pipeline" })
   name?: string;
 
   @ApiProperty({ enum: DagWorkflowStatus })
@@ -182,13 +186,13 @@ export class DagWorkflowResponseDto {
   @ApiProperty({ type: [DagNodeResponseDto] })
   nodes: DagNodeResponseDto[];
 
-  @ApiProperty({ description: 'Topological execution order', type: [String] })
+  @ApiProperty({ description: "Topological execution order", type: [String] })
   topologicalOrder: string[];
 
-  @ApiProperty({ example: '2026-02-24T09:00:00.000Z' })
+  @ApiProperty({ example: "2026-02-24T09:00:00.000Z" })
   createdAt: string;
 
-  @ApiPropertyOptional({ example: '2026-02-24T09:05:00.000Z' })
+  @ApiPropertyOptional({ example: "2026-02-24T09:05:00.000Z" })
   completedAt?: string;
 }
 

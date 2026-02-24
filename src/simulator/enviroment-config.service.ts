@@ -1,6 +1,9 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { SimulationConfig, EnvironmentType } from '../interfaces/simulation.interface';
-import * as seedrandom from 'seedrandom';
+import { Injectable, Logger } from "@nestjs/common";
+import {
+  SimulationConfig,
+  EnvironmentType,
+} from "../interfaces/simulation.interface";
+import * as seedrandom from "seedrandom";
 
 @Injectable()
 export class EnvironmentConfigService {
@@ -13,16 +16,16 @@ export class EnvironmentConfigService {
    */
   async configure(config: SimulationConfig): Promise<void> {
     this.currentConfig = config;
-    
+
     // Initialize deterministic random number generator
     this.rng = seedrandom(config.seed.toString());
-    
+
     // Override Math.random for deterministic behavior
     this.injectDeterministicRandom();
-    
+
     // Override Date.now for deterministic timestamps
     this.injectDeterministicTime();
-    
+
     this.logger.log(`Environment configured with seed: ${config.seed}`);
   }
 
@@ -31,7 +34,7 @@ export class EnvironmentConfigService {
    */
   getConfig(): SimulationConfig {
     if (!this.currentConfig) {
-      throw new Error('Environment not configured');
+      throw new Error("Environment not configured");
     }
     return this.currentConfig;
   }
@@ -41,7 +44,7 @@ export class EnvironmentConfigService {
    */
   random(): number {
     if (!this.rng) {
-      throw new Error('RNG not initialized');
+      throw new Error("RNG not initialized");
     }
     return this.rng();
   }
@@ -66,14 +69,14 @@ export class EnvironmentConfigService {
   private injectDeterministicRandom(): void {
     const originalRandom = Math.random;
     const rng = this.rng;
-    
+
     // Store original for potential restoration
     (Math as any)._originalRandom = originalRandom;
-    
+
     // Override Math.random
     Math.random = function () {
       if (!rng) {
-        throw new Error('Deterministic RNG not initialized');
+        throw new Error("Deterministic RNG not initialized");
       }
       return rng();
     };
@@ -83,12 +86,12 @@ export class EnvironmentConfigService {
    * Inject deterministic time function
    */
   private injectDeterministicTime(): void {
-    let simulatedTime = new Date('2024-01-01T00:00:00Z').getTime();
+    let simulatedTime = new Date("2024-01-01T00:00:00Z").getTime();
     const timeScale = this.currentConfig?.timeScale || 1;
-    
+
     // Store original
     (Date as any)._originalNow = Date.now;
-    
+
     // Override Date.now
     Date.now = function () {
       simulatedTime += 1000 * timeScale; // Advance by 1 second * timeScale
@@ -106,7 +109,7 @@ export class EnvironmentConfigService {
     if ((Date as any)._originalNow) {
       Date.now = (Date as any)._originalNow;
     }
-    this.logger.log('Environment restored to original state');
+    this.logger.log("Environment restored to original state");
   }
 
   /**

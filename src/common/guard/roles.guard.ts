@@ -3,9 +3,9 @@ import {
   CanActivate,
   ExecutionContext,
   ForbiddenException,
-} from '@nestjs/common';
-import { Reflector } from '@nestjs/core';
-import { ROLES_KEY, Role } from '../decorators/roles.decorator';
+} from "@nestjs/common";
+import { Reflector } from "@nestjs/core";
+import { ROLES_KEY, Role } from "../decorators/roles.decorator";
 
 /**
  * Guard that checks if the authenticated user has the required role(s)
@@ -39,7 +39,7 @@ export class RolesGuard implements CanActivate {
     const user = request.user;
 
     if (!user) {
-      throw new ForbiddenException('No authenticated user found');
+      throw new ForbiddenException("No authenticated user found");
     }
 
     // Check if user has at least one of the required roles
@@ -54,7 +54,7 @@ export class RolesGuard implements CanActivate {
 
     if (!hasRole) {
       throw new ForbiddenException(
-        `Insufficient permissions. Required roles: ${requiredRoles.join(', ')}`,
+        `Insufficient permissions. Required roles: ${requiredRoles.join(", ")}`,
       );
     }
 

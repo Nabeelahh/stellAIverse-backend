@@ -9,7 +9,7 @@ import {
   HttpCode,
   HttpStatus,
   Logger,
-} from '@nestjs/common';
+} from "@nestjs/common";
 import {
   ApiTags,
   ApiOperation,
@@ -17,13 +17,17 @@ import {
   ApiBody,
   ApiParam,
   ApiQuery,
-} from '@nestjs/swagger';
-import { CacheService } from './cache.service';
-import { CacheWarmerService, CacheWarmingRequest, CacheWarmingResult } from './services/cache-warmer.service';
-import { CacheConfigDto, CacheMetrics } from './dto/cache-config.dto';
+} from "@nestjs/swagger";
+import { CacheService } from "./cache.service";
+import {
+  CacheWarmerService,
+  CacheWarmingRequest,
+  CacheWarmingResult,
+} from "./services/cache-warmer.service";
+import { CacheConfigDto, CacheMetrics } from "./dto/cache-config.dto";
 
-@ApiTags('cache')
-@Controller('cache')
+@ApiTags("cache")
+@Controller("cache")
 export class CacheController {
   private readonly logger = new Logger(CacheController.name);
 
@@ -35,29 +39,29 @@ export class CacheController {
   /**
    * Get health status of cache backend
    */
-  @Get('health')
-  @ApiOperation({ summary: 'Check cache backend health' })
+  @Get("health")
+  @ApiOperation({ summary: "Check cache backend health" })
   @ApiResponse({
     status: 200,
-    description: 'Cache backend is healthy',
-    schema: { example: { healthy: true, backend: 'redis' } },
+    description: "Cache backend is healthy",
+    schema: { example: { healthy: true, backend: "redis" } },
   })
   async health(): Promise<{ healthy: boolean; backend: string }> {
     const isHealthy = await this.cacheService.health();
     return {
       healthy: isHealthy,
-      backend: 'redis', // TODO: Return actual backend type
+      backend: "redis", // TODO: Return actual backend type
     };
   }
 
   /**
    * Get cache metrics
    */
-  @Get('metrics')
-  @ApiOperation({ summary: 'Get cache metrics and statistics' })
+  @Get("metrics")
+  @ApiOperation({ summary: "Get cache metrics and statistics" })
   @ApiResponse({
     status: 200,
-    description: 'Cache metrics retrieved successfully',
+    description: "Cache metrics retrieved successfully",
     type: () => CacheMetrics,
   })
   async getMetrics(): Promise<CacheMetrics> {
@@ -67,17 +71,17 @@ export class CacheController {
   /**
    * Invalidate cache by job type
    */
-  @Delete('job-type/:jobType')
+  @Delete("job-type/:jobType")
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Invalidate all cache for a job type' })
-  @ApiParam({ name: 'jobType', description: 'Job type to invalidate' })
+  @ApiOperation({ summary: "Invalidate all cache for a job type" })
+  @ApiParam({ name: "jobType", description: "Job type to invalidate" })
   @ApiResponse({
     status: 200,
-    description: 'Cache invalidated successfully',
+    description: "Cache invalidated successfully",
     schema: { example: { success: true, invalidatedCount: 10 } },
   })
   async invalidateByJobType(
-    @Param('jobType') jobType: string,
+    @Param("jobType") jobType: string,
   ): Promise<{ success: boolean; invalidatedCount: number }> {
     const invalidatedCount =
       await this.cacheService.invalidateByJobType(jobType);
@@ -87,23 +91,23 @@ export class CacheController {
   /**
    * Invalidate cache by tags
    */
-  @Delete('tags')
+  @Delete("tags")
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Invalidate cache entries by tags' })
+  @ApiOperation({ summary: "Invalidate cache entries by tags" })
   @ApiQuery({
-    name: 'tags',
-    description: 'Comma-separated list of tags',
-    example: 'production,critical',
+    name: "tags",
+    description: "Comma-separated list of tags",
+    example: "production,critical",
   })
   @ApiResponse({
     status: 200,
-    description: 'Cache invalidated successfully',
+    description: "Cache invalidated successfully",
     schema: { example: { success: true, invalidatedCount: 5 } },
   })
   async invalidateByTags(
-    @Query('tags') tagsQuery: string,
+    @Query("tags") tagsQuery: string,
   ): Promise<{ success: boolean; invalidatedCount: number }> {
-    const tags = tagsQuery.split(',').map((tag) => tag.trim());
+    const tags = tagsQuery.split(",").map((tag) => tag.trim());
     const invalidatedCount = await this.cacheService.invalidateByTags(tags);
     return { success: true, invalidatedCount };
   }
@@ -111,17 +115,17 @@ export class CacheController {
   /**
    * Invalidate dependents for a job
    */
-  @Delete('dependents/:jobId')
+  @Delete("dependents/:jobId")
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Invalidate cache for jobs depending on given job' })
-  @ApiParam({ name: 'jobId', description: 'Job ID' })
+  @ApiOperation({ summary: "Invalidate cache for jobs depending on given job" })
+  @ApiParam({ name: "jobId", description: "Job ID" })
   @ApiResponse({
     status: 200,
-    description: 'Dependent caches invalidated successfully',
+    description: "Dependent caches invalidated successfully",
     schema: { example: { success: true, invalidatedCount: 3 } },
   })
   async invalidateDependents(
-    @Param('jobId') jobId: string,
+    @Param("jobId") jobId: string,
   ): Promise<{ success: boolean; invalidatedCount: number }> {
     const invalidatedCount =
       await this.cacheService.invalidateDependents(jobId);
@@ -133,46 +137,50 @@ export class CacheController {
    */
   @Delete()
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Clear all cache entries' })
+  @ApiOperation({ summary: "Clear all cache entries" })
   @ApiResponse({
     status: 200,
-    description: 'All cache cleared successfully',
-    schema: { example: { success: true, message: 'All cache entries cleared' } },
+    description: "All cache cleared successfully",
+    schema: {
+      example: { success: true, message: "All cache entries cleared" },
+    },
   })
   async clearAll(): Promise<{ success: boolean; message: string }> {
     await this.cacheService.clear();
-    return { success: true, message: 'All cache entries cleared' };
+    return { success: true, message: "All cache entries cleared" };
   }
 
   /**
    * Warm cache with batch of jobs
    */
-  @Post('warm')
+  @Post("warm")
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Warm cache with batch of jobs (pre-populate cache)' })
+  @ApiOperation({
+    summary: "Warm cache with batch of jobs (pre-populate cache)",
+  })
   @ApiBody({
-    description: 'Cache warming request with jobs',
+    description: "Cache warming request with jobs",
     schema: {
-      example: { 
-        jobs: [{ jobType: 'data-processing', payload: { id: 1 } }],
-        priority: 'normal'
-      }
+      example: {
+        jobs: [{ jobType: "data-processing", payload: { id: 1 } }],
+        priority: "normal",
+      },
     },
   })
   @ApiResponse({
     status: 200,
-    description: 'Cache warming completed',
+    description: "Cache warming completed",
     schema: {
       example: {
         totalJobs: 5,
         successCount: 5,
         failureCount: 0,
-        cacheKeys: ['cache-key-1', 'cache-key-2'],
+        cacheKeys: ["cache-key-1", "cache-key-2"],
         errors: [],
         totalBytesAdded: 1024000,
         duration: 150,
-      }
-    }
+      },
+    },
   })
   async warmCache(
     @Body() request: CacheWarmingRequest,
@@ -186,15 +194,15 @@ export class CacheController {
   /**
    * Get warming status
    */
-  @Get('warming/status')
-  @ApiOperation({ summary: 'Get current cache warming status' })
+  @Get("warming/status")
+  @ApiOperation({ summary: "Get current cache warming status" })
   @ApiResponse({
     status: 200,
-    description: 'Warming status retrieved',
+    description: "Warming status retrieved",
     schema: {
       example: {
         activeWarmings: 1,
-        inProgress: ['warming-1234567890'],
+        inProgress: ["warming-1234567890"],
       },
     },
   })
@@ -208,22 +216,24 @@ export class CacheController {
   /**
    * Get cache warming strategy for job type
    */
-  @Get('warming/strategy/:jobType')
-  @ApiOperation({ summary: 'Get recommended cache warming strategy for job type' })
-  @ApiParam({ name: 'jobType', description: 'Job type' })
+  @Get("warming/strategy/:jobType")
+  @ApiOperation({
+    summary: "Get recommended cache warming strategy for job type",
+  })
+  @ApiParam({ name: "jobType", description: "Job type" })
   @ApiResponse({
     status: 200,
-    description: 'Warming strategy retrieved',
+    description: "Warming strategy retrieved",
     schema: {
       example: {
         ttl: 86400000,
         batchSize: 100,
-        priority: 'normal',
+        priority: "normal",
       },
     },
   })
   async getWarmingStrategy(
-    @Param('jobType') jobType: string,
+    @Param("jobType") jobType: string,
   ): Promise<{ ttl: number; batchSize: number; priority: string }> {
     return this.cacheWarmerService.getWarmingStrategy(jobType);
   }

@@ -1,12 +1,12 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { OpenAIProviderAdapter } from "./openai-provider.adapter";
-import { 
-  NormalizedPrompt, 
+import {
+  NormalizedPrompt,
   OpenAIStreamChunk,
   ToolCall,
   ToolCallDelta,
   FunctionCall,
-  FunctionCallDelta
+  FunctionCallDelta,
 } from "./dto/provider.dto";
 
 /**
@@ -118,7 +118,7 @@ export class OpenAIStreamingAdapter extends OpenAIProviderAdapter {
 
     for await (const chunk of this.executeStream(prompt)) {
       const delta = chunk.choices[0]?.delta;
-      
+
       if (delta?.content) {
         fullContent += delta.content;
       }
@@ -127,15 +127,15 @@ export class OpenAIStreamingAdapter extends OpenAIProviderAdapter {
       if (delta?.tool_calls) {
         for (const toolCallDelta of delta.tool_calls) {
           const index = toolCallDelta.index || 0;
-          
+
           if (!toolCalls[index]) {
             toolCalls[index] = {
               id: "",
               type: "function",
               function: {
                 name: "",
-                arguments: ""
-              }
+                arguments: "",
+              },
             };
           }
 
@@ -148,7 +148,8 @@ export class OpenAIStreamingAdapter extends OpenAIProviderAdapter {
               toolCalls[index].function.name += toolCallDelta.function.name;
             }
             if (toolCallDelta.function.arguments) {
-              toolCalls[index].function.arguments += toolCallDelta.function.arguments;
+              toolCalls[index].function.arguments +=
+                toolCallDelta.function.arguments;
             }
           }
         }
@@ -160,16 +161,20 @@ export class OpenAIStreamingAdapter extends OpenAIProviderAdapter {
           functionCall = {};
         }
         if (delta.function_call.name) {
-          functionCall.name = (functionCall.name || "") + delta.function_call.name;
+          functionCall.name =
+            (functionCall.name || "") + delta.function_call.name;
         }
         if (delta.function_call.arguments) {
-          functionCall.arguments = (functionCall.arguments || "") + delta.function_call.arguments;
+          functionCall.arguments =
+            (functionCall.arguments || "") + delta.function_call.arguments;
         }
       }
     }
 
     // Clean up empty tool calls and function call
-    toolCalls = toolCalls.filter(tc => tc.id || tc.function.name || tc.function.arguments);
+    toolCalls = toolCalls.filter(
+      (tc) => tc.id || tc.function.name || tc.function.arguments,
+    );
     if (!functionCall.name && !functionCall.arguments) {
       functionCall = undefined;
     }
@@ -177,7 +182,7 @@ export class OpenAIStreamingAdapter extends OpenAIProviderAdapter {
     return {
       content: fullContent,
       toolCalls: toolCalls.length > 0 ? toolCalls : undefined,
-      functionCall
+      functionCall,
     };
   }
 
@@ -192,12 +197,12 @@ export class OpenAIStreamingAdapter extends OpenAIProviderAdapter {
     onError?: (error: any) => void,
   ): Promise<void> {
     try {
-      let accumulatedToolCalls: any[] = [];
-      let accumulatedFunctionCall: any = {};
+      const accumulatedToolCalls: any[] = [];
+      const accumulatedFunctionCall: any = {};
 
       for await (const chunk of this.executeStream(prompt)) {
         const delta = chunk.choices[0]?.delta;
-        
+
         let hasContent = false;
         let hasToolCalls = false;
         let hasFunctionCall = false;
@@ -211,15 +216,15 @@ export class OpenAIStreamingAdapter extends OpenAIProviderAdapter {
           hasToolCalls = true;
           for (const toolCallDelta of delta.tool_calls) {
             const index = toolCallDelta.index || 0;
-            
+
             if (!accumulatedToolCalls[index]) {
               accumulatedToolCalls[index] = {
                 id: "",
                 type: "function",
                 function: {
                   name: "",
-                  arguments: ""
-                }
+                  arguments: "",
+                },
               };
             }
 
@@ -229,10 +234,12 @@ export class OpenAIStreamingAdapter extends OpenAIProviderAdapter {
 
             if (toolCallDelta.function) {
               if (toolCallDelta.function.name) {
-                accumulatedToolCalls[index].function.name += toolCallDelta.function.name;
+                accumulatedToolCalls[index].function.name +=
+                  toolCallDelta.function.name;
               }
               if (toolCallDelta.function.arguments) {
-                accumulatedToolCalls[index].function.arguments += toolCallDelta.function.arguments;
+                accumulatedToolCalls[index].function.arguments +=
+                  toolCallDelta.function.arguments;
               }
             }
           }
@@ -242,22 +249,30 @@ export class OpenAIStreamingAdapter extends OpenAIProviderAdapter {
         if (delta?.function_call) {
           hasFunctionCall = true;
           if (delta.function_call.name) {
-            accumulatedFunctionCall.name = (accumulatedFunctionCall.name || "") + delta.function_call.name;
+            accumulatedFunctionCall.name =
+              (accumulatedFunctionCall.name || "") + delta.function_call.name;
           }
           if (delta.function_call.arguments) {
-            accumulatedFunctionCall.arguments = (accumulatedFunctionCall.arguments || "") + delta.function_call.arguments;
+            accumulatedFunctionCall.arguments =
+              (accumulatedFunctionCall.arguments || "") +
+              delta.function_call.arguments;
           }
         }
 
         // Call callback if we have any updates
         if (hasContent || hasToolCalls || hasFunctionCall) {
-          const cleanToolCalls = accumulatedToolCalls.filter(tc => tc.id || tc.function.name || tc.function.arguments);
-          const cleanFunctionCall = (accumulatedFunctionCall.name || accumulatedFunctionCall.arguments) ? accumulatedFunctionCall : undefined;
-          
+          const cleanToolCalls = accumulatedToolCalls.filter(
+            (tc) => tc.id || tc.function.name || tc.function.arguments,
+          );
+          const cleanFunctionCall =
+            accumulatedFunctionCall.name || accumulatedFunctionCall.arguments
+              ? accumulatedFunctionCall
+              : undefined;
+
           onChunk(
             delta?.content || "",
             cleanToolCalls.length > 0 ? cleanToolCalls : undefined,
-            cleanFunctionCall
+            cleanFunctionCall,
           );
         }
 

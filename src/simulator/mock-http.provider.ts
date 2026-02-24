@@ -1,11 +1,15 @@
-import { Injectable, Logger } from '@nestjs/common';
-import * as seedrandom from 'seedrandom';
+import { Injectable, Logger } from "@nestjs/common";
+import * as seedrandom from "seedrandom";
 
 @Injectable()
 export class MockHttpProvider {
   private readonly logger = new Logger(MockHttpProvider.name);
   private rng: seedrandom.PRNG;
-  private requestLog: Array<{ method: string; url: string; timestamp: number }> = [];
+  private requestLog: Array<{
+    method: string;
+    url: string;
+    timestamp: number;
+  }> = [];
   private liveSubmissionCount = 0;
   private mockResponses: Map<string, any> = new Map();
 
@@ -13,33 +17,33 @@ export class MockHttpProvider {
    * Initialize the mock HTTP provider with deterministic behavior
    */
   async initialize(seed: number): Promise<void> {
-    this.rng = seedrandom(seed.toString() + '-http');
+    this.rng = seedrandom(seed.toString() + "-http");
     this.requestLog = [];
     this.liveSubmissionCount = 0;
-    
+
     // Set up default mock responses
     this.setupDefaultResponses();
-    
-    this.logger.log('Mock HTTP provider initialized');
+
+    this.logger.log("Mock HTTP provider initialized");
   }
 
   /**
    * Setup default mock responses
    */
   private setupDefaultResponses(): void {
-    this.mockResponses.set('/api/interact', {
+    this.mockResponses.set("/api/interact", {
       success: true,
-      data: { message: 'Interaction successful' },
+      data: { message: "Interaction successful" },
     });
 
-    this.mockResponses.set('/api/status', {
+    this.mockResponses.set("/api/status", {
       success: true,
-      status: 'running',
+      status: "running",
     });
 
-    this.mockResponses.set('/api/submit', {
+    this.mockResponses.set("/api/submit", {
       success: true,
-      message: 'Submission received (mock)',
+      message: "Submission received (mock)",
     });
   }
 
@@ -47,13 +51,13 @@ export class MockHttpProvider {
    * Mock GET request
    */
   async get(url: string, params?: any): Promise<any> {
-    this.logRequest('GET', url);
-    
+    this.logRequest("GET", url);
+
     // Prevent live submissions
     if (this.isLiveEndpoint(url)) {
       this.logger.warn(`Blocked live submission to: ${url}`);
       this.liveSubmissionCount++;
-      throw new Error('Live submissions are blocked in simulation mode');
+      throw new Error("Live submissions are blocked in simulation mode");
     }
 
     // Return mock response
@@ -72,13 +76,13 @@ export class MockHttpProvider {
    * Mock POST request
    */
   async post(url: string, data?: any): Promise<any> {
-    this.logRequest('POST', url);
+    this.logRequest("POST", url);
 
     // Prevent live submissions
     if (this.isLiveEndpoint(url)) {
       this.logger.warn(`Blocked live submission to: ${url}`);
       this.liveSubmissionCount++;
-      throw new Error('Live submissions are blocked in simulation mode');
+      throw new Error("Live submissions are blocked in simulation mode");
     }
 
     // Return mock response
@@ -96,12 +100,12 @@ export class MockHttpProvider {
    * Mock PUT request
    */
   async put(url: string, data?: any): Promise<any> {
-    this.logRequest('PUT', url);
+    this.logRequest("PUT", url);
 
     if (this.isLiveEndpoint(url)) {
       this.logger.warn(`Blocked live submission to: ${url}`);
       this.liveSubmissionCount++;
-      throw new Error('Live submissions are blocked in simulation mode');
+      throw new Error("Live submissions are blocked in simulation mode");
     }
 
     const mockResponse = {
@@ -118,12 +122,12 @@ export class MockHttpProvider {
    * Mock DELETE request
    */
   async delete(url: string): Promise<any> {
-    this.logRequest('DELETE', url);
+    this.logRequest("DELETE", url);
 
     if (this.isLiveEndpoint(url)) {
       this.logger.warn(`Blocked live submission to: ${url}`);
       this.liveSubmissionCount++;
-      throw new Error('Live submissions are blocked in simulation mode');
+      throw new Error("Live submissions are blocked in simulation mode");
     }
 
     const mockResponse = {
@@ -156,7 +160,7 @@ export class MockHttpProvider {
       /\/publish$/,
     ];
 
-    return livePatterns.some(pattern => pattern.test(url));
+    return livePatterns.some((pattern) => pattern.test(url));
   }
 
   /**
@@ -164,7 +168,7 @@ export class MockHttpProvider {
    */
   private async simulateNetworkDelay(): Promise<void> {
     const delay = Math.floor(this.rng() * 100) + 50; // 50-150ms
-    await new Promise(resolve => setTimeout(resolve, delay));
+    await new Promise((resolve) => setTimeout(resolve, delay));
   }
 
   /**
@@ -182,8 +186,8 @@ export class MockHttpProvider {
    * Generate deterministic ID
    */
   private generateId(): string {
-    const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
-    let id = '';
+    const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
+    let id = "";
     for (let i = 0; i < 8; i++) {
       id += chars[Math.floor(this.rng() * chars.length)];
     }
@@ -221,6 +225,6 @@ export class MockHttpProvider {
   async reset(): Promise<void> {
     this.requestLog = [];
     this.liveSubmissionCount = 0;
-    this.logger.log('Mock HTTP provider reset');
+    this.logger.log("Mock HTTP provider reset");
   }
 }
