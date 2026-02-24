@@ -1,10 +1,15 @@
-import { Injectable, ConflictException, UnauthorizedException, BadRequestException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import * as bcrypt from 'bcrypt';
-import { JwtService } from '@nestjs/jwt';
-import { User } from '../user/entities/user.entity';
-import { RegisterDto, LoginDto } from './dto/auth.dto';
+import {
+  Injectable,
+  ConflictException,
+  UnauthorizedException,
+  BadRequestException,
+} from "@nestjs/common";
+import { InjectRepository } from "@nestjs/typeorm";
+import { Repository } from "typeorm";
+import * as bcrypt from "bcrypt";
+import { JwtService } from "@nestjs/jwt";
+import { User } from "../user/entities/user.entity";
+import { RegisterDto, LoginDto } from "./dto/auth.dto";
 
 @Injectable()
 export class AuthService {
@@ -14,7 +19,9 @@ export class AuthService {
     private readonly jwtService: JwtService,
   ) {}
 
-  async register(registerDto: RegisterDto): Promise<{ token: string; user: Partial<User> }> {
+  async register(
+    registerDto: RegisterDto,
+  ): Promise<{ token: string; user: Partial<User> }> {
     const { email, password, username } = registerDto;
 
     // Check if user already exists
@@ -24,10 +31,10 @@ export class AuthService {
 
     if (existingUser) {
       if (existingUser.email === email) {
-        throw new ConflictException('Email already registered');
+        throw new ConflictException("Email already registered");
       }
       if (existingUser.username === username) {
-        throw new ConflictException('Username already taken');
+        throw new ConflictException("Username already taken");
       }
     }
 
@@ -47,7 +54,11 @@ export class AuthService {
     await this.userRepository.save(user);
 
     // Generate JWT token
-    const payload = { sub: user.id, email: user.email, username: user.username };
+    const payload = {
+      sub: user.id,
+      email: user.email,
+      username: user.username,
+    };
     const token = this.jwtService.sign(payload);
 
     return {
@@ -61,28 +72,36 @@ export class AuthService {
     };
   }
 
-  async login(loginDto: LoginDto): Promise<{ token: string; user: Partial<User> }> {
+  async login(
+    loginDto: LoginDto,
+  ): Promise<{ token: string; user: Partial<User> }> {
     const { email, password } = loginDto;
 
     // Find user by email
     const user = await this.userRepository.findOne({ where: { email } });
     if (!user) {
-      throw new UnauthorizedException('Invalid credentials');
+      throw new UnauthorizedException("Invalid credentials");
     }
 
     // Check if user has a password (traditional auth user)
     if (!user.password) {
-      throw new BadRequestException('This account uses wallet authentication. Please use wallet login.');
+      throw new BadRequestException(
+        "This account uses wallet authentication. Please use wallet login.",
+      );
     }
 
     // Verify password
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
-      throw new UnauthorizedException('Invalid credentials');
+      throw new UnauthorizedException("Invalid credentials");
     }
 
     // Generate JWT token
-    const payload = { sub: user.id, email: user.email, username: user.username };
+    const payload = {
+      sub: user.id,
+      email: user.email,
+      username: user.username,
+    };
     const token = this.jwtService.sign(payload);
 
     return {
@@ -100,7 +119,9 @@ export class AuthService {
     return this.userRepository.findOne({ where: { id: userId } });
   }
 
-  async getAuthStatus(user: User): Promise<{ isAuthenticated: boolean; user: Partial<User> }> {
+  async getAuthStatus(
+    user: User,
+  ): Promise<{ isAuthenticated: boolean; user: Partial<User> }> {
     return {
       isAuthenticated: true,
       user: {

@@ -26,15 +26,14 @@ export class AddUsernameAndPasswordFields1708600000001 implements MigrationInter
     );
 
     // Create index on username
-    await queryRunner.createIndex(
-      'users',
-      new Index('IDX_USER_USERNAME', ['username'], { isUnique: true }),
-    );
+    await queryRunner.query(`
+      CREATE UNIQUE INDEX "IDX_USER_USERNAME" ON "users" ("username") WHERE "username" IS NOT NULL
+    `);
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
     // Drop index
-    await queryRunner.dropIndex('users', 'IDX_USER_USERNAME');
+    await queryRunner.query(`DROP INDEX "IDX_USER_USERNAME"`);
 
     // Drop columns
     await queryRunner.dropColumn('users', 'password');

@@ -25,8 +25,10 @@ describe('WalletAuthService', () => {
 
   const mockUser: User = {
     id: '123',
+    username: null,
     walletAddress: '0x1234567890abcdef1234567890abcdef12345678',
     email: 'test@example.com',
+    password: null,
     emailVerified: true,
     role: UserRole.USER,
     createdAt: new Date(),
