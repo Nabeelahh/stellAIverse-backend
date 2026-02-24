@@ -1,7 +1,7 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { MockHttpProvider } from './mock-http.provider';
-import { MockDatabaseProvider } from './mock-database.provider';
-import { MockMessageQueueProvider } from './mock-message-queue.provider';
+import { Injectable, Logger } from "@nestjs/common";
+import { MockHttpProvider } from "./mock-http.provider";
+import { MockDatabaseProvider } from "./mock-database.provider";
+import { MockMessageQueueProvider } from "./mock-message-queue.provider";
 
 @Injectable()
 export class MockProviderFactory {
@@ -22,7 +22,7 @@ export class MockProviderFactory {
    * Initialize all mock providers with a seed for determinism
    */
   async initializeProviders(seed: number): Promise<void> {
-    this.logger.log('Initializing mock providers');
+    this.logger.log("Initializing mock providers");
 
     // Initialize HTTP provider
     await this.httpProvider.initialize(seed);
@@ -36,7 +36,7 @@ export class MockProviderFactory {
     await this.messageQueueProvider.initialize(seed);
     this.providers.messageQueue = this.messageQueueProvider;
 
-    this.logger.log('All mock providers initialized');
+    this.logger.log("All mock providers initialized");
   }
 
   /**
@@ -49,7 +49,7 @@ export class MockProviderFactory {
   /**
    * Get specific provider by type
    */
-  getProvider(type: 'http' | 'database' | 'messageQueue') {
+  getProvider(type: "http" | "database" | "messageQueue") {
     return this.providers[type];
   }
 
@@ -57,8 +57,8 @@ export class MockProviderFactory {
    * Reset all providers
    */
   async resetProviders(): Promise<void> {
-    this.logger.log('Resetting all mock providers');
-    
+    this.logger.log("Resetting all mock providers");
+
     await this.httpProvider.reset();
     await this.databaseProvider.reset();
     await this.messageQueueProvider.reset();
@@ -70,7 +70,8 @@ export class MockProviderFactory {
   async verifyNoLiveSubmissions(): Promise<boolean> {
     const httpSubmissions = await this.httpProvider.getLiveSubmissionCount();
     const dbSubmissions = await this.databaseProvider.getLiveSubmissionCount();
-    const mqSubmissions = await this.messageQueueProvider.getLiveSubmissionCount();
+    const mqSubmissions =
+      await this.messageQueueProvider.getLiveSubmissionCount();
 
     const totalSubmissions = httpSubmissions + dbSubmissions + mqSubmissions;
 
@@ -79,7 +80,7 @@ export class MockProviderFactory {
       return false;
     }
 
-    this.logger.log('Verified: No live submissions');
+    this.logger.log("Verified: No live submissions");
     return true;
   }
 }

@@ -1,32 +1,35 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { getRepositoryToken } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { AgentsService } from './agents.service';
-import { Agent, AgentCapability, AgentStatus } from './entities/agent.entity';
-import { SearchAgentsDto, SortBy, SortOrder } from './dto/search-agents.dto';
+import { Test, TestingModule } from "@nestjs/testing";
+import { getRepositoryToken } from "@nestjs/typeorm";
+import { Repository } from "typeorm";
+import { AgentsService } from "./agents.service";
+import { Agent, AgentCapability, AgentStatus } from "./entities/agent.entity";
+import { SearchAgentsDto, SortBy, SortOrder } from "./dto/search-agents.dto";
 
-describe('AgentsService', () => {
+describe("AgentsService", () => {
   let service: AgentsService;
   let repository: Repository<Agent>;
 
   const mockAgent: Agent = {
-    id: '123e4567-e89b-12d3-a456-426614174000',
-    name: 'Test Agent',
-    description: 'A test agent for unit testing',
-    capabilities: [AgentCapability.CODE_EXECUTION, AgentCapability.TEXT_GENERATION],
+    id: "123e4567-e89b-12d3-a456-426614174000",
+    name: "Test Agent",
+    description: "A test agent for unit testing",
+    capabilities: [
+      AgentCapability.CODE_EXECUTION,
+      AgentCapability.TEXT_GENERATION,
+    ],
     status: AgentStatus.ACTIVE,
     averageRating: 4.5,
     totalRatings: 100,
     usageCount: 500,
     popularityScore: 85.5,
     metadata: {
-      author: 'Test Author',
-      version: '1.0.0',
-      tags: ['test', 'ai'],
+      author: "Test Author",
+      version: "1.0.0",
+      tags: ["test", "ai"],
     },
-    createdAt: new Date('2024-01-01'),
-    updatedAt: new Date('2024-01-15'),
-    lastUsedAt: new Date('2024-01-15'),
+    createdAt: new Date("2024-01-01"),
+    updatedAt: new Date("2024-01-15"),
+    lastUsedAt: new Date("2024-01-15"),
   };
 
   const mockQueryBuilder: any = {
@@ -64,12 +67,12 @@ describe('AgentsService', () => {
     jest.clearAllMocks();
   });
 
-  it('should be defined', () => {
+  it("should be defined", () => {
     expect(service).toBeDefined();
   });
 
-  describe('searchAgents', () => {
-    it('should search agents with default parameters', async () => {
+  describe("searchAgents", () => {
+    it("should search agents with default parameters", async () => {
       const searchDto: SearchAgentsDto = {};
 
       const result = await service.searchAgents(searchDto);
@@ -80,20 +83,20 @@ describe('AgentsService', () => {
       expect(mockQueryBuilder.andWhere).toHaveBeenCalled();
     });
 
-    it('should search agents with query text', async () => {
+    it("should search agents with query text", async () => {
       const searchDto: SearchAgentsDto = {
-        query: 'test',
+        query: "test",
       };
 
       await service.searchAgents(searchDto);
 
       expect(mockQueryBuilder.andWhere).toHaveBeenCalledWith(
-        expect.stringContaining('LOWER(agent.name)'),
-        expect.objectContaining({ query: '%test%' }),
+        expect.stringContaining("LOWER(agent.name)"),
+        expect.objectContaining({ query: "%test%" }),
       );
     });
 
-    it('should filter by capabilities', async () => {
+    it("should filter by capabilities", async () => {
       const searchDto: SearchAgentsDto = {
         capabilities: [AgentCapability.CODE_EXECUTION],
       };
@@ -101,12 +104,14 @@ describe('AgentsService', () => {
       await service.searchAgents(searchDto);
 
       expect(mockQueryBuilder.andWhere).toHaveBeenCalledWith(
-        'agent.capabilities @> :capabilities',
-        expect.objectContaining({ capabilities: [AgentCapability.CODE_EXECUTION] }),
+        "agent.capabilities @> :capabilities",
+        expect.objectContaining({
+          capabilities: [AgentCapability.CODE_EXECUTION],
+        }),
       );
     });
 
-    it('should filter by minimum rating', async () => {
+    it("should filter by minimum rating", async () => {
       const searchDto: SearchAgentsDto = {
         minRating: 4.0,
       };
@@ -114,25 +119,25 @@ describe('AgentsService', () => {
       await service.searchAgents(searchDto);
 
       expect(mockQueryBuilder.andWhere).toHaveBeenCalledWith(
-        'agent.averageRating >= :minRating',
+        "agent.averageRating >= :minRating",
         expect.objectContaining({ minRating: 4.0 }),
       );
     });
 
-    it('should filter by tags', async () => {
+    it("should filter by tags", async () => {
       const searchDto: SearchAgentsDto = {
-        tags: ['ai', 'test'],
+        tags: ["ai", "test"],
       };
 
       await service.searchAgents(searchDto);
 
       expect(mockQueryBuilder.andWhere).toHaveBeenCalledWith(
         "agent.metadata->'tags' ?| :tags",
-        expect.objectContaining({ tags: ['ai', 'test'] }),
+        expect.objectContaining({ tags: ["ai", "test"] }),
       );
     });
 
-    it('should apply pagination', async () => {
+    it("should apply pagination", async () => {
       const searchDto: SearchAgentsDto = {
         page: 2,
         limit: 10,
@@ -144,7 +149,7 @@ describe('AgentsService', () => {
       expect(mockQueryBuilder.take).toHaveBeenCalledWith(10);
     });
 
-    it('should sort by popularity', async () => {
+    it("should sort by popularity", async () => {
       const searchDto: SearchAgentsDto = {
         sortBy: SortBy.POPULARITY,
         sortOrder: SortOrder.DESC,
@@ -152,23 +157,32 @@ describe('AgentsService', () => {
 
       await service.searchAgents(searchDto);
 
-      expect(mockQueryBuilder.orderBy).toHaveBeenCalledWith('agent.popularityScore', 'DESC');
+      expect(mockQueryBuilder.orderBy).toHaveBeenCalledWith(
+        "agent.popularityScore",
+        "DESC",
+      );
     });
 
-    it('should sort by rating', async () => {
+    it("should sort by rating", async () => {
       const searchDto: SearchAgentsDto = {
         sortBy: SortBy.RATING,
       };
 
       await service.searchAgents(searchDto);
 
-      expect(mockQueryBuilder.orderBy).toHaveBeenCalledWith('agent.averageRating', 'DESC');
-      expect(mockQueryBuilder.addOrderBy).toHaveBeenCalledWith('agent.totalRatings', 'DESC');
+      expect(mockQueryBuilder.orderBy).toHaveBeenCalledWith(
+        "agent.averageRating",
+        "DESC",
+      );
+      expect(mockQueryBuilder.addOrderBy).toHaveBeenCalledWith(
+        "agent.totalRatings",
+        "DESC",
+      );
     });
 
-    it('should calculate correct pagination metadata', async () => {
+    it("should calculate correct pagination metadata", async () => {
       mockQueryBuilder.getCount.mockResolvedValue(50);
-      
+
       const searchDto: SearchAgentsDto = {
         page: 2,
         limit: 20,
@@ -182,36 +196,38 @@ describe('AgentsService', () => {
     });
   });
 
-  describe('findOne', () => {
-    it('should find an agent by id', async () => {
-      jest.spyOn(repository, 'findOne').mockResolvedValue(mockAgent);
+  describe("findOne", () => {
+    it("should find an agent by id", async () => {
+      jest.spyOn(repository, "findOne").mockResolvedValue(mockAgent);
 
       const result = await service.findOne(mockAgent.id);
 
       expect(result).toEqual(mockAgent);
-      expect(repository.findOne).toHaveBeenCalledWith({ where: { id: mockAgent.id } });
+      expect(repository.findOne).toHaveBeenCalledWith({
+        where: { id: mockAgent.id },
+      });
     });
 
-    it('should return null if agent not found', async () => {
-      jest.spyOn(repository, 'findOne').mockResolvedValue(null);
+    it("should return null if agent not found", async () => {
+      jest.spyOn(repository, "findOne").mockResolvedValue(null);
 
-      const result = await service.findOne('non-existent-id');
+      const result = await service.findOne("non-existent-id");
 
       expect(result).toBeNull();
     });
   });
 
-  describe('trackUsage', () => {
-    it('should increment usage count and update last used timestamp', async () => {
-      jest.spyOn(repository, 'increment').mockResolvedValue(undefined);
-      jest.spyOn(repository, 'update').mockResolvedValue(undefined as any);
-      jest.spyOn(repository, 'findOne').mockResolvedValue(mockAgent);
+  describe("trackUsage", () => {
+    it("should increment usage count and update last used timestamp", async () => {
+      jest.spyOn(repository, "increment").mockResolvedValue(undefined);
+      jest.spyOn(repository, "update").mockResolvedValue(undefined as any);
+      jest.spyOn(repository, "findOne").mockResolvedValue(mockAgent);
 
       await service.trackUsage(mockAgent.id);
 
       expect(repository.increment).toHaveBeenCalledWith(
         { id: mockAgent.id },
-        'usageCount',
+        "usageCount",
         1,
       );
       expect(repository.update).toHaveBeenCalledWith(
@@ -221,10 +237,10 @@ describe('AgentsService', () => {
     });
   });
 
-  describe('updatePopularityScore', () => {
-    it('should calculate and update popularity score', async () => {
-      jest.spyOn(repository, 'findOne').mockResolvedValue(mockAgent);
-      jest.spyOn(repository, 'update').mockResolvedValue(undefined as any);
+  describe("updatePopularityScore", () => {
+    it("should calculate and update popularity score", async () => {
+      jest.spyOn(repository, "findOne").mockResolvedValue(mockAgent);
+      jest.spyOn(repository, "update").mockResolvedValue(undefined as any);
 
       await service.updatePopularityScore(mockAgent.id);
 
@@ -234,22 +250,22 @@ describe('AgentsService', () => {
       );
     });
 
-    it('should return early if agent not found', async () => {
-      jest.spyOn(repository, 'findOne').mockResolvedValue(null);
-      jest.spyOn(repository, 'update').mockResolvedValue(undefined as any);
+    it("should return early if agent not found", async () => {
+      jest.spyOn(repository, "findOne").mockResolvedValue(null);
+      jest.spyOn(repository, "update").mockResolvedValue(undefined as any);
 
-      await service.updatePopularityScore('non-existent-id');
+      await service.updatePopularityScore("non-existent-id");
 
       expect(repository.update).not.toHaveBeenCalled();
     });
   });
 
-  describe('updateAllPopularityScores', () => {
-    it('should update popularity scores for all agents', async () => {
-      const agents = [mockAgent, { ...mockAgent, id: 'another-id' }];
-      jest.spyOn(repository, 'find').mockResolvedValue(agents);
-      jest.spyOn(repository, 'findOne').mockResolvedValue(mockAgent);
-      jest.spyOn(repository, 'update').mockResolvedValue(undefined as any);
+  describe("updateAllPopularityScores", () => {
+    it("should update popularity scores for all agents", async () => {
+      const agents = [mockAgent, { ...mockAgent, id: "another-id" }];
+      jest.spyOn(repository, "find").mockResolvedValue(agents);
+      jest.spyOn(repository, "findOne").mockResolvedValue(mockAgent);
+      jest.spyOn(repository, "update").mockResolvedValue(undefined as any);
 
       await service.updateAllPopularityScores();
 

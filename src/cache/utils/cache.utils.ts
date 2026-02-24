@@ -1,7 +1,7 @@
-import * as crypto from 'crypto';
-import * as zlib from 'zlib';
-import { promisify } from 'util';
-import { CompressionAlgorithm } from '../dto/cache-config.dto';
+import * as crypto from "crypto";
+import * as zlib from "zlib";
+import { promisify } from "util";
+import { CompressionAlgorithm } from "../dto/cache-config.dto";
 
 const gzip = promisify(zlib.gzip);
 const gunzip = promisify(zlib.gunzip);
@@ -20,9 +20,9 @@ export class CacheUtils {
     const content = JSON.stringify({
       jobType,
       payload,
-      providerId: providerId || 'default',
+      providerId: providerId || "default",
     });
-    return crypto.createHash('sha256').update(content).digest('hex');
+    return crypto.createHash("sha256").update(content).digest("hex");
   }
 
   /**
@@ -33,7 +33,7 @@ export class CacheUtils {
     contentHash: string,
     jobId?: string,
   ): string {
-    return `cache:${jobType}:${contentHash}${jobId ? `:${jobId}` : ''}`;
+    return `cache:${jobType}:${contentHash}${jobId ? `:${jobId}` : ""}`;
   }
 
   /**
@@ -44,7 +44,7 @@ export class CacheUtils {
     contentHash: string;
     jobId?: string;
   } {
-    const parts = cacheKey.replace('cache:', '').split(':');
+    const parts = cacheKey.replace("cache:", "").split(":");
     return {
       jobType: parts[0],
       contentHash: parts[1],
@@ -64,15 +64,24 @@ export class CacheUtils {
     switch (algorithm) {
       case CompressionAlgorithm.GZIP:
         const gzipCompressed = await gzip(payload);
-        return { compressed: gzipCompressed, algorithm: CompressionAlgorithm.GZIP };
+        return {
+          compressed: gzipCompressed,
+          algorithm: CompressionAlgorithm.GZIP,
+        };
 
       case CompressionAlgorithm.BROTLI:
         const brotliCompressed = await brotliCompress(payload);
-        return { compressed: brotliCompressed, algorithm: CompressionAlgorithm.BROTLI };
+        return {
+          compressed: brotliCompressed,
+          algorithm: CompressionAlgorithm.BROTLI,
+        };
 
       case CompressionAlgorithm.NONE:
       default:
-        return { compressed: Buffer.from(payload), algorithm: CompressionAlgorithm.NONE };
+        return {
+          compressed: Buffer.from(payload),
+          algorithm: CompressionAlgorithm.NONE,
+        };
     }
   }
 
@@ -114,7 +123,10 @@ export class CacheUtils {
   /**
    * Calculate compression ratio
    */
-  static calculateCompressionRatio(original: number, compressed: number): number {
+  static calculateCompressionRatio(
+    original: number,
+    compressed: number,
+  ): number {
     if (original === 0) return 0;
     return ((original - compressed) / original) * 100;
   }

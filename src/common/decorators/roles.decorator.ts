@@ -1,12 +1,12 @@
-import { SetMetadata } from '@nestjs/common';
+import { SetMetadata } from "@nestjs/common";
 
 export enum Role {
-  USER = 'user',
-  OPERATOR = 'operator',
-  ADMIN = 'admin',
+  USER = "user",
+  OPERATOR = "operator",
+  ADMIN = "admin",
 }
 
-export const ROLES_KEY = 'roles';
+export const ROLES_KEY = "roles";
 
 /**
  * Decorator that assigns required roles to a route handler.

@@ -1,6 +1,6 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { OnEvent } from '@nestjs/event-emitter';
-import { CacheService } from '../cache.service';
+import { Injectable, Logger } from "@nestjs/common";
+import { OnEvent } from "@nestjs/event-emitter";
+import { CacheService } from "../cache.service";
 
 @Injectable()
 export class CacheInvalidationListener {
@@ -11,18 +11,21 @@ export class CacheInvalidationListener {
   /**
    * Listen for job completion and invalidate dependent caches
    */
-  @OnEvent('compute.job.completed')
+  @OnEvent("compute.job.completed")
   async handleJobCompleted(payload: {
     jobId: string;
     jobType: string;
     result: any;
   }): Promise<void> {
     try {
-      this.logger.debug(`Job completed, checking for dependent caches: ${payload.jobId}`);
+      this.logger.debug(
+        `Job completed, checking for dependent caches: ${payload.jobId}`,
+      );
 
       // Invalidate dependent cache entries
-      const invalidatedCount =
-        await this.cacheService.invalidateDependents(payload.jobId);
+      const invalidatedCount = await this.cacheService.invalidateDependents(
+        payload.jobId,
+      );
 
       if (invalidatedCount > 0) {
         this.logger.log(
@@ -40,18 +43,21 @@ export class CacheInvalidationListener {
   /**
    * Listen for job failure and clear dependent caches
    */
-  @OnEvent('compute.job.failed')
+  @OnEvent("compute.job.failed")
   async handleJobFailed(payload: {
     jobId: string;
     jobType: string;
     error: string;
   }): Promise<void> {
     try {
-      this.logger.debug(`Job failed, clearing dependent caches: ${payload.jobId}`);
+      this.logger.debug(
+        `Job failed, clearing dependent caches: ${payload.jobId}`,
+      );
 
       // Invalidate dependent cache entries
-      const invalidatedCount =
-        await this.cacheService.invalidateDependents(payload.jobId);
+      const invalidatedCount = await this.cacheService.invalidateDependents(
+        payload.jobId,
+      );
 
       if (invalidatedCount > 0) {
         this.logger.log(
@@ -69,7 +75,7 @@ export class CacheInvalidationListener {
   /**
    * Listen for job definition changes and invalidate old versions
    */
-  @OnEvent('compute.job.definition.updated')
+  @OnEvent("compute.job.definition.updated")
   async handleJobDefinitionUpdated(payload: {
     jobType: string;
     previousVersion: number;
@@ -86,7 +92,7 @@ export class CacheInvalidationListener {
           payload.jobType,
           {
             jobDefinitionHash: `${payload.jobType}-v${payload.newVersion}`,
-            providerVersion: 'v1',
+            providerVersion: "v1",
             schemaVersion: payload.newVersion,
           },
         );
@@ -107,7 +113,7 @@ export class CacheInvalidationListener {
   /**
    * Listen for cache invalidation events
    */
-  @OnEvent('cache.entry.invalidated')
+  @OnEvent("cache.entry.invalidated")
   async handleCacheInvalidated(payload: {
     cacheKey: string;
     jobType: string;
@@ -130,7 +136,7 @@ export class CacheInvalidationListener {
   /**
    * Listen for cache warming completion
    */
-  @OnEvent('cache.warming.completed')
+  @OnEvent("cache.warming.completed")
   async handleCacheWarmingCompleted(payload: {
     warmingId: string;
     totalJobs: number;
@@ -155,7 +161,7 @@ export class CacheInvalidationListener {
   /**
    * Listen for cache entry storage
    */
-  @OnEvent('cache.entry.stored')
+  @OnEvent("cache.entry.stored")
   async handleCacheEntryStored(payload: {
     cacheKey: string;
     jobType: string;
@@ -165,7 +171,7 @@ export class CacheInvalidationListener {
     try {
       if (payload.dependencies && payload.dependencies.length > 0) {
         this.logger.debug(
-          `Cache entry stored with dependencies: ${payload.cacheKey} -> ${payload.dependencies.join(', ')}`,
+          `Cache entry stored with dependencies: ${payload.cacheKey} -> ${payload.dependencies.join(", ")}`,
         );
       }
     } catch (error) {

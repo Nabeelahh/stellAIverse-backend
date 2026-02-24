@@ -1,6 +1,10 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { HealthIndicator, HealthIndicatorResult, HealthCheckError } from '@nestjs/terminus';
-import { QueueService } from '../../compute-job-queue/queue.service';
+import { Injectable, Logger } from "@nestjs/common";
+import {
+  HealthIndicator,
+  HealthIndicatorResult,
+  HealthCheckError,
+} from "@nestjs/terminus";
+import { QueueService } from "../../compute-job-queue/queue.service";
 
 @Injectable()
 export class QueueHealthIndicator extends HealthIndicator {
@@ -20,10 +24,10 @@ export class QueueHealthIndicator extends HealthIndicator {
 
       if (!isRedisHealthy) {
         const result = this.getStatus(key, false, {
-          status: 'down',
-          message: 'Redis connection is not available',
+          status: "down",
+          message: "Redis connection is not available",
         });
-        throw new HealthCheckError('Queue health check failed', result);
+        throw new HealthCheckError("Queue health check failed", result);
       }
 
       // Get queue stats for additional context
@@ -40,8 +44,10 @@ export class QueueHealthIndicator extends HealthIndicator {
         stats.compute.active < maxActiveJobs;
 
       const result = this.getStatus(key, isHealthy, {
-        status: isHealthy ? 'up' : 'degraded',
-        message: isHealthy ? 'Queue is healthy' : 'Queue is experiencing high load',
+        status: isHealthy ? "up" : "degraded",
+        message: isHealthy
+          ? "Queue is healthy"
+          : "Queue is experiencing high load",
         stats: {
           ...stats,
           thresholds: {
@@ -53,12 +59,15 @@ export class QueueHealthIndicator extends HealthIndicator {
       });
 
       if (!isHealthy) {
-        throw new HealthCheckError('Queue health check failed - high load detected', result);
+        throw new HealthCheckError(
+          "Queue health check failed - high load detected",
+          result,
+        );
       }
 
       return result;
     } catch (error) {
-      this.logger.error('Queue health check failed', error.message);
+      this.logger.error("Queue health check failed", error.message);
 
       // If it's already a HealthCheckError, re-throw it
       if (error instanceof HealthCheckError) {
@@ -66,11 +75,11 @@ export class QueueHealthIndicator extends HealthIndicator {
       }
 
       const result = this.getStatus(key, false, {
-        status: 'down',
+        status: "down",
         message: `Queue health check failed: ${error.message}`,
       });
 
-      throw new HealthCheckError('Queue health check failed', result);
+      throw new HealthCheckError("Queue health check failed", result);
     }
   }
 }

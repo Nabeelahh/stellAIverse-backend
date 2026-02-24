@@ -1,9 +1,9 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { QueueHealthIndicator } from './queue.health-indicator';
-import { QueueService } from '../../compute-job-queue/queue.service';
-import { HealthCheckError } from '@nestjs/terminus';
+import { Test, TestingModule } from "@nestjs/testing";
+import { QueueHealthIndicator } from "./queue.health-indicator";
+import { QueueService } from "../../compute-job-queue/queue.service";
+import { HealthCheckError } from "@nestjs/terminus";
 
-describe('QueueHealthIndicator', () => {
+describe("QueueHealthIndicator", () => {
   let indicator: QueueHealthIndicator;
   let queueService: QueueService;
 
@@ -29,8 +29,8 @@ describe('QueueHealthIndicator', () => {
     jest.clearAllMocks();
   });
 
-  describe('isHealthy', () => {
-    it('should return healthy status when Redis and queue stats are good', async () => {
+  describe("isHealthy", () => {
+    it("should return healthy status when Redis and queue stats are good", async () => {
       mockQueueService.isRedisHealthy.mockResolvedValue(true);
       mockQueueService.getQueueStats.mockResolvedValue({
         compute: {
@@ -45,19 +45,21 @@ describe('QueueHealthIndicator', () => {
         },
       });
 
-      const result = await indicator.isHealthy('queue');
+      const result = await indicator.isHealthy("queue");
 
-      expect(result.queue.status).toBe('up');
-      expect(result.queue.message).toBe('Queue is healthy');
+      expect(result.queue.status).toBe("up");
+      expect(result.queue.message).toBe("Queue is healthy");
     });
 
-    it('should throw HealthCheckError when Redis is not healthy', async () => {
+    it("should throw HealthCheckError when Redis is not healthy", async () => {
       mockQueueService.isRedisHealthy.mockResolvedValue(false);
 
-      await expect(indicator.isHealthy('queue')).rejects.toThrow(HealthCheckError);
+      await expect(indicator.isHealthy("queue")).rejects.toThrow(
+        HealthCheckError,
+      );
     });
 
-    it('should throw HealthCheckError when failed jobs exceed threshold', async () => {
+    it("should throw HealthCheckError when failed jobs exceed threshold", async () => {
       mockQueueService.isRedisHealthy.mockResolvedValue(true);
       mockQueueService.getQueueStats.mockResolvedValue({
         compute: {
@@ -72,10 +74,12 @@ describe('QueueHealthIndicator', () => {
         },
       });
 
-      await expect(indicator.isHealthy('queue')).rejects.toThrow(HealthCheckError);
+      await expect(indicator.isHealthy("queue")).rejects.toThrow(
+        HealthCheckError,
+      );
     });
 
-    it('should throw HealthCheckError when dead letter jobs exceed threshold', async () => {
+    it("should throw HealthCheckError when dead letter jobs exceed threshold", async () => {
       mockQueueService.isRedisHealthy.mockResolvedValue(true);
       mockQueueService.getQueueStats.mockResolvedValue({
         compute: {
@@ -90,10 +94,12 @@ describe('QueueHealthIndicator', () => {
         },
       });
 
-      await expect(indicator.isHealthy('queue')).rejects.toThrow(HealthCheckError);
+      await expect(indicator.isHealthy("queue")).rejects.toThrow(
+        HealthCheckError,
+      );
     });
 
-    it('should throw HealthCheckError when active jobs exceed threshold', async () => {
+    it("should throw HealthCheckError when active jobs exceed threshold", async () => {
       mockQueueService.isRedisHealthy.mockResolvedValue(true);
       mockQueueService.getQueueStats.mockResolvedValue({
         compute: {
@@ -108,10 +114,12 @@ describe('QueueHealthIndicator', () => {
         },
       });
 
-      await expect(indicator.isHealthy('queue')).rejects.toThrow(HealthCheckError);
+      await expect(indicator.isHealthy("queue")).rejects.toThrow(
+        HealthCheckError,
+      );
     });
 
-    it('should include stats in the result', async () => {
+    it("should include stats in the result", async () => {
       const stats = {
         compute: {
           waiting: 5,
@@ -128,7 +136,7 @@ describe('QueueHealthIndicator', () => {
       mockQueueService.isRedisHealthy.mockResolvedValue(true);
       mockQueueService.getQueueStats.mockResolvedValue(stats);
 
-      const result = await indicator.isHealthy('queue');
+      const result = await indicator.isHealthy("queue");
 
       expect(result.queue.stats).toBeDefined();
       expect(result.queue.stats.compute).toEqual(stats.compute);

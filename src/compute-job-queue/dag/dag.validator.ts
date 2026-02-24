@@ -1,8 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
-import {
-  DagDependency,
-  DagValidationResult,
-} from './dag.interfaces';
+import { Injectable, Logger } from "@nestjs/common";
+import { DagDependency, DagValidationResult } from "./dag.interfaces";
 
 /**
  * Validates DAG structure at submission time.
@@ -25,14 +22,12 @@ export class DagValidator {
    * @param nodes Map of nodeId to its dependency list.
    * @returns Validation result with errors (if any) and topological order.
    */
-  validate(
-    nodes: Map<string, DagDependency[]>,
-  ): DagValidationResult {
+  validate(nodes: Map<string, DagDependency[]>): DagValidationResult {
     const errors: string[] = [];
     const nodeIds = new Set(nodes.keys());
 
     if (nodeIds.size === 0) {
-      return { valid: false, errors: ['DAG must contain at least one node'] };
+      return { valid: false, errors: ["DAG must contain at least one node"] };
     }
 
     // --- structural checks ---------------------------------------------------
@@ -68,7 +63,9 @@ export class DagValidator {
       // Should not happen if cycle detection is correct, but guard anyway.
       return {
         valid: false,
-        errors: ['Topological sort produced incomplete ordering – possible cycle'],
+        errors: [
+          "Topological sort produced incomplete ordering – possible cycle",
+        ],
       };
     }
 
@@ -131,7 +128,7 @@ export class DagValidator {
               .slice(stack.findIndex(([id]) => id === child));
             cyclePath.push(child);
             errors.push(
-              `Circular dependency detected: ${cyclePath.join(' → ')}`,
+              `Circular dependency detected: ${cyclePath.join(" → ")}`,
             );
           } else if (childColour === WHITE) {
             colour.set(child, GREY);
@@ -151,9 +148,7 @@ export class DagValidator {
    * Kahn's algorithm – produces a topological ordering.
    * Nodes with no dependencies are processed first.
    */
-  private topologicalSort(
-    nodes: Map<string, DagDependency[]>,
-  ): string[] {
+  private topologicalSort(nodes: Map<string, DagDependency[]>): string[] {
     // In-degree: how many parents must complete before this node.
     const inDegree = new Map<string, number>();
     // Forward adjacency: parent → children.

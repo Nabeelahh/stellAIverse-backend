@@ -1,7 +1,7 @@
-import { MemoryCacheBackend } from '../backends/memory.backend';
-import { CacheEntry, CacheVersionDto } from '../dto/cache-config.dto';
+import { MemoryCacheBackend } from "../backends/memory.backend";
+import { CacheEntry, CacheVersionDto } from "../dto/cache-config.dto";
 
-describe('MemoryCacheBackend', () => {
+describe("MemoryCacheBackend", () => {
   let backend: MemoryCacheBackend;
 
   beforeEach(async () => {
@@ -13,15 +13,15 @@ describe('MemoryCacheBackend', () => {
     await backend.disconnect();
   });
 
-  describe('Set and Get', () => {
-    it('should set and retrieve cache entries', async () => {
-      const cacheKey = 'cache:test:hash123';
+  describe("Set and Get", () => {
+    it("should set and retrieve cache entries", async () => {
+      const cacheKey = "cache:test:hash123";
       const entry: CacheEntry = {
         cacheKey,
-        jobId: 'job-1',
-        jobType: 'test',
-        data: { result: 'success' },
-        hash: 'hash123',
+        jobId: "job-1",
+        jobType: "test",
+        data: { result: "success" },
+        hash: "hash123",
         compressed: false,
         createdAt: new Date().toISOString(),
         expiresAt: new Date(Date.now() + 3600000).toISOString(),
@@ -32,23 +32,23 @@ describe('MemoryCacheBackend', () => {
       const retrieved = await backend.get(cacheKey);
 
       expect(retrieved).toBeDefined();
-      expect(retrieved?.jobId).toBe('job-1');
-      expect(retrieved?.data).toEqual({ result: 'success' });
+      expect(retrieved?.jobId).toBe("job-1");
+      expect(retrieved?.data).toEqual({ result: "success" });
     });
 
-    it('should return null for non-existent keys', async () => {
-      const retrieved = await backend.get('cache:nonexistent:key');
+    it("should return null for non-existent keys", async () => {
+      const retrieved = await backend.get("cache:nonexistent:key");
       expect(retrieved).toBeNull();
     });
 
-    it('should handle expired entries', async () => {
-      const cacheKey = 'cache:test:expired';
+    it("should handle expired entries", async () => {
+      const cacheKey = "cache:test:expired";
       const entry: CacheEntry = {
         cacheKey,
-        jobId: 'job-1',
-        jobType: 'test',
-        data: { result: 'success' },
-        hash: 'hash123',
+        jobId: "job-1",
+        jobType: "test",
+        data: { result: "success" },
+        hash: "hash123",
         compressed: false,
         createdAt: new Date().toISOString(),
         expiresAt: new Date(Date.now() - 1000).toISOString(), // Expired
@@ -62,15 +62,15 @@ describe('MemoryCacheBackend', () => {
     });
   });
 
-  describe('Delete Operations', () => {
-    it('should delete cache entries', async () => {
-      const cacheKey = 'cache:test:delete';
+  describe("Delete Operations", () => {
+    it("should delete cache entries", async () => {
+      const cacheKey = "cache:test:delete";
       const entry: CacheEntry = {
         cacheKey,
-        jobId: 'job-1',
-        jobType: 'test',
-        data: { result: 'success' },
-        hash: 'hash123',
+        jobId: "job-1",
+        jobType: "test",
+        data: { result: "success" },
+        hash: "hash123",
         compressed: false,
         createdAt: new Date().toISOString(),
         expiresAt: new Date(Date.now() + 3600000).toISOString(),
@@ -86,16 +86,16 @@ describe('MemoryCacheBackend', () => {
       expect(retrieved).toBeNull();
     });
 
-    it('should delete multiple entries', async () => {
-      const keys = ['cache:test:1', 'cache:test:2', 'cache:test:3'];
+    it("should delete multiple entries", async () => {
+      const keys = ["cache:test:1", "cache:test:2", "cache:test:3"];
 
       for (const key of keys) {
         const entry: CacheEntry = {
           cacheKey: key,
-          jobId: 'job-1',
-          jobType: 'test',
-          data: { result: 'success' },
-          hash: 'hash123',
+          jobId: "job-1",
+          jobType: "test",
+          data: { result: "success" },
+          hash: "hash123",
           compressed: false,
           createdAt: new Date().toISOString(),
           expiresAt: new Date(Date.now() + 3600000).toISOString(),
@@ -113,15 +113,15 @@ describe('MemoryCacheBackend', () => {
     });
   });
 
-  describe('Exists Check', () => {
-    it('should check if key exists', async () => {
-      const cacheKey = 'cache:test:exists';
+  describe("Exists Check", () => {
+    it("should check if key exists", async () => {
+      const cacheKey = "cache:test:exists";
       const entry: CacheEntry = {
         cacheKey,
-        jobId: 'job-1',
-        jobType: 'test',
-        data: { result: 'success' },
-        hash: 'hash123',
+        jobId: "job-1",
+        jobType: "test",
+        data: { result: "success" },
+        hash: "hash123",
         compressed: false,
         createdAt: new Date().toISOString(),
         expiresAt: new Date(Date.now() + 3600000).toISOString(),
@@ -137,21 +137,21 @@ describe('MemoryCacheBackend', () => {
     });
   });
 
-  describe('Pattern Matching', () => {
-    it('should get entries by pattern', async () => {
+  describe("Pattern Matching", () => {
+    it("should get entries by pattern", async () => {
       const keys = [
-        'cache:data-processing:hash1',
-        'cache:data-processing:hash2',
-        'cache:ai-computation:hash3',
+        "cache:data-processing:hash1",
+        "cache:data-processing:hash2",
+        "cache:ai-computation:hash3",
       ];
 
       for (const key of keys) {
         const entry: CacheEntry = {
           cacheKey: key,
-          jobId: 'job-1',
-          jobType: key.split(':')[1],
-          data: { result: 'success' },
-          hash: key.split(':')[2],
+          jobId: "job-1",
+          jobType: key.split(":")[1],
+          data: { result: "success" },
+          hash: key.split(":")[2],
           compressed: false,
           createdAt: new Date().toISOString(),
           expiresAt: new Date(Date.now() + 3600000).toISOString(),
@@ -160,47 +160,47 @@ describe('MemoryCacheBackend', () => {
         await backend.set(key, entry);
       }
 
-      const results = await backend.getByPattern('cache:data-processing:*');
+      const results = await backend.getByPattern("cache:data-processing:*");
       expect(results).toHaveLength(2);
-      expect(results[0].jobType).toBe('data-processing');
+      expect(results[0].jobType).toBe("data-processing");
     });
   });
 
-  describe('Tag-based Clearing', () => {
-    it('should clear entries by tags', async () => {
-      const cacheKey1 = 'cache:test:tag1';
-      const cacheKey2 = 'cache:test:tag2';
+  describe("Tag-based Clearing", () => {
+    it("should clear entries by tags", async () => {
+      const cacheKey1 = "cache:test:tag1";
+      const cacheKey2 = "cache:test:tag2";
 
       const entry1: CacheEntry = {
         cacheKey: cacheKey1,
-        jobId: 'job-1',
-        jobType: 'test',
-        data: { result: 'success' },
-        hash: 'hash123',
+        jobId: "job-1",
+        jobType: "test",
+        data: { result: "success" },
+        hash: "hash123",
         compressed: false,
         createdAt: new Date().toISOString(),
         expiresAt: new Date(Date.now() + 3600000).toISOString(),
         version: { schemaVersion: 1 },
-        tags: ['production', 'critical'],
+        tags: ["production", "critical"],
       };
 
       const entry2: CacheEntry = {
         cacheKey: cacheKey2,
-        jobId: 'job-2',
-        jobType: 'test',
-        data: { result: 'success' },
-        hash: 'hash456',
+        jobId: "job-2",
+        jobType: "test",
+        data: { result: "success" },
+        hash: "hash456",
         compressed: false,
         createdAt: new Date().toISOString(),
         expiresAt: new Date(Date.now() + 3600000).toISOString(),
         version: { schemaVersion: 1 },
-        tags: ['development'],
+        tags: ["development"],
       };
 
       await backend.set(cacheKey1, entry1);
       await backend.set(cacheKey2, entry2);
 
-      const cleared = await backend.clearByTags(['production']);
+      const cleared = await backend.clearByTags(["production"]);
       expect(cleared).toBe(1);
 
       const retrieved1 = await backend.get(cacheKey1);
@@ -211,22 +211,22 @@ describe('MemoryCacheBackend', () => {
     });
   });
 
-  describe('Job Type Clearing', () => {
-    it('should clear entries by job type', async () => {
-      const jobType = 'data-processing';
+  describe("Job Type Clearing", () => {
+    it("should clear entries by job type", async () => {
+      const jobType = "data-processing";
       const keys = [
-        'cache:data-processing:hash1',
-        'cache:data-processing:hash2',
-        'cache:ai-computation:hash3',
+        "cache:data-processing:hash1",
+        "cache:data-processing:hash2",
+        "cache:ai-computation:hash3",
       ];
 
       for (const key of keys) {
         const entry: CacheEntry = {
           cacheKey: key,
-          jobId: 'job-1',
-          jobType: key.split(':')[1],
-          data: { result: 'success' },
-          hash: key.split(':')[2],
+          jobId: "job-1",
+          jobType: key.split(":")[1],
+          data: { result: "success" },
+          hash: key.split(":")[2],
           compressed: false,
           createdAt: new Date().toISOString(),
           expiresAt: new Date(Date.now() + 3600000).toISOString(),
@@ -238,23 +238,23 @@ describe('MemoryCacheBackend', () => {
       const cleared = await backend.clearByJobType(jobType);
       expect(cleared).toBe(2);
 
-      const check1 = await backend.exists('cache:data-processing:hash1');
-      const check3 = await backend.exists('cache:ai-computation:hash3');
+      const check1 = await backend.exists("cache:data-processing:hash1");
+      const check3 = await backend.exists("cache:ai-computation:hash3");
 
       expect(check1).toBe(false);
       expect(check3).toBe(true);
     });
   });
 
-  describe('Metrics', () => {
-    it('should track cache metrics', async () => {
-      const cacheKey = 'cache:test:metrics';
+  describe("Metrics", () => {
+    it("should track cache metrics", async () => {
+      const cacheKey = "cache:test:metrics";
       const entry: CacheEntry = {
         cacheKey,
-        jobId: 'job-1',
-        jobType: 'test',
-        data: { result: 'success' },
-        hash: 'hash123',
+        jobId: "job-1",
+        jobType: "test",
+        data: { result: "success" },
+        hash: "hash123",
         compressed: false,
         createdAt: new Date().toISOString(),
         expiresAt: new Date(Date.now() + 3600000).toISOString(),
@@ -270,13 +270,13 @@ describe('MemoryCacheBackend', () => {
     });
   });
 
-  describe('Version Management', () => {
-    it('should set and get versions', async () => {
-      const cacheKey = 'cache:test:version';
+  describe("Version Management", () => {
+    it("should set and get versions", async () => {
+      const cacheKey = "cache:test:version";
       const version: CacheVersionDto = {
-        jobDefinitionHash: 'hash-v1',
+        jobDefinitionHash: "hash-v1",
         schemaVersion: 1,
-        providerVersion: 'v1',
+        providerVersion: "v1",
       };
 
       await backend.setVersion(cacheKey, version);
@@ -286,20 +286,17 @@ describe('MemoryCacheBackend', () => {
       expect(retrieved?.schemaVersion).toBe(1);
     });
 
-    it('should invalidate old versions', async () => {
-      const jobType = 'data-processing';
-      const keys = [
-        `cache:${jobType}:hash1`,
-        `cache:${jobType}:hash2`,
-      ];
+    it("should invalidate old versions", async () => {
+      const jobType = "data-processing";
+      const keys = [`cache:${jobType}:hash1`, `cache:${jobType}:hash2`];
 
       for (const key of keys) {
         const entry: CacheEntry = {
           cacheKey: key,
-          jobId: 'job-1',
+          jobId: "job-1",
           jobType,
-          data: { result: 'success' },
-          hash: key.split(':')[2],
+          data: { result: "success" },
+          hash: key.split(":")[2],
           compressed: false,
           createdAt: new Date().toISOString(),
           expiresAt: new Date(Date.now() + 3600000).toISOString(),
@@ -319,17 +316,17 @@ describe('MemoryCacheBackend', () => {
     });
   });
 
-  describe('Clear All', () => {
-    it('should clear all entries', async () => {
-      const cacheKey1 = 'cache:test:1';
-      const cacheKey2 = 'cache:test:2';
+  describe("Clear All", () => {
+    it("should clear all entries", async () => {
+      const cacheKey1 = "cache:test:1";
+      const cacheKey2 = "cache:test:2";
 
       const entry: CacheEntry = {
         cacheKey: cacheKey1,
-        jobId: 'job-1',
-        jobType: 'test',
-        data: { result: 'success' },
-        hash: 'hash123',
+        jobId: "job-1",
+        jobType: "test",
+        data: { result: "success" },
+        hash: "hash123",
         compressed: false,
         createdAt: new Date().toISOString(),
         expiresAt: new Date(Date.now() + 3600000).toISOString(),
@@ -350,8 +347,8 @@ describe('MemoryCacheBackend', () => {
     });
   });
 
-  describe('Health Check', () => {
-    it('should report healthy status', async () => {
+  describe("Health Check", () => {
+    it("should report healthy status", async () => {
       const isHealthy = await backend.health();
       expect(isHealthy).toBe(true);
     });

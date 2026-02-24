@@ -1,5 +1,8 @@
-import { Global, Module } from '@nestjs/common';
-import { ConfigModule as NestConfigModule, ConfigService } from '@nestjs/config';
+import { Global, Module } from "@nestjs/common";
+import {
+  ConfigModule as NestConfigModule,
+  ConfigService,
+} from "@nestjs/config";
 import {
   appConfig,
   databaseConfig,
@@ -13,9 +16,9 @@ import {
   integrationsConfig,
   featureConfig,
   miscConfig,
-} from './configuration';
-import { validate } from './env-validator';
-import { ConfigService as AppConfigService } from './config.service';
+} from "./configuration";
+import { validate } from "./env-validator";
+import { ConfigService as AppConfigService } from "./config.service";
 
 /**
  * Global configuration module
@@ -28,7 +31,7 @@ import { ConfigService as AppConfigService } from './config.service';
       isGlobal: true,
       cache: true,
       expandVariables: true,
-      envFilePath: ['.env.local', '.env'],
+      envFilePath: [".env.local", ".env"],
       validate,
       load: [
         appConfig,

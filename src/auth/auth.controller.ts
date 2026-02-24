@@ -134,10 +134,7 @@ export class AuthController {
   @Throttle({ default: { ttl: 60000, limit: 3 } })
   @Post("recover-wallet")
   async recoverWallet(@Body() dto: RecoverWalletDto) {
-    return this.walletAuthService.recoverWallet(
-      dto.email,
-      dto.recoveryToken,
-    );
+    return this.walletAuthService.recoverWallet(dto.email, dto.recoveryToken);
   }
 
   // Admin Endpoints (RBAC protected)
@@ -147,7 +144,7 @@ export class AuthController {
   @Get("admin/users")
   async listUsers() {
     // Example admin-only endpoint
-    return { message: 'Admin access granted. User listing would go here.' };
+    return { message: "Admin access granted. User listing would go here." };
   }
 
   @Roles(Role.ADMIN, Role.OPERATOR)
@@ -155,6 +152,6 @@ export class AuthController {
   @Get("admin/stats")
   async getStats() {
     // Example operator/admin endpoint
-    return { message: 'Stats access granted for admin/operator roles.' };
+    return { message: "Stats access granted for admin/operator roles." };
   }
 }

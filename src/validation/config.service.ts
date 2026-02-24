@@ -1,5 +1,5 @@
-import { Injectable } from '@nestjs/common';
-import { ConfigService as NestConfigService } from '@nestjs/config';
+import { Injectable } from "@nestjs/common";
+import { ConfigService as NestConfigService } from "@nestjs/config";
 import {
   AppConfig,
   DatabaseConfig,
@@ -13,7 +13,7 @@ import {
   IntegrationsConfig,
   FeatureFlags,
   MiscConfig,
-} from './config.interface';
+} from "./config.interface";
 
 /**
  * Typed configuration service wrapper
@@ -27,84 +27,84 @@ export class ConfigService {
    * Get application configuration
    */
   get app(): AppConfig {
-    return this.configService.get<AppConfig>('app')!;
+    return this.configService.get<AppConfig>("app")!;
   }
 
   /**
    * Get database configuration
    */
   get database(): DatabaseConfig {
-    return this.configService.get<DatabaseConfig>('database')!;
+    return this.configService.get<DatabaseConfig>("database")!;
   }
 
   /**
    * Get Redis configuration
    */
   get redis(): RedisConfig {
-    return this.configService.get<RedisConfig>('redis')!;
+    return this.configService.get<RedisConfig>("redis")!;
   }
 
   /**
    * Get JWT configuration
    */
   get jwt(): JwtConfig {
-    return this.configService.get<JwtConfig>('jwt')!;
+    return this.configService.get<JwtConfig>("jwt")!;
   }
 
   /**
    * Get security configuration
    */
   get security(): SecurityConfig {
-    return this.configService.get<SecurityConfig>('security')!;
+    return this.configService.get<SecurityConfig>("security")!;
   }
 
   /**
    * Get AWS configuration
    */
   get aws(): AwsConfig {
-    return this.configService.get<AwsConfig>('aws')!;
+    return this.configService.get<AwsConfig>("aws")!;
   }
 
   /**
    * Get email configuration
    */
   get email(): EmailConfig {
-    return this.configService.get<EmailConfig>('email')!;
+    return this.configService.get<EmailConfig>("email")!;
   }
 
   /**
    * Get logging configuration
    */
   get logging(): LoggingConfig {
-    return this.configService.get<LoggingConfig>('logging')!;
+    return this.configService.get<LoggingConfig>("logging")!;
   }
 
   /**
    * Get monitoring configuration
    */
   get monitoring(): MonitoringConfig {
-    return this.configService.get<MonitoringConfig>('monitoring')!;
+    return this.configService.get<MonitoringConfig>("monitoring")!;
   }
 
   /**
    * Get integrations configuration
    */
   get integrations(): IntegrationsConfig {
-    return this.configService.get<IntegrationsConfig>('integrations')!;
+    return this.configService.get<IntegrationsConfig>("integrations")!;
   }
 
   /**
    * Get feature flags
    */
   get features(): FeatureFlags {
-    return this.configService.get<FeatureFlags>('features')!;
+    return this.configService.get<FeatureFlags>("features")!;
   }
 
   /**
    * Get miscellaneous configuration
    */
   get misc(): MiscConfig {
-    return this.configService.get<MiscConfig>('misc')!;
+    return this.configService.get<MiscConfig>("misc")!;
   }
 
   /**

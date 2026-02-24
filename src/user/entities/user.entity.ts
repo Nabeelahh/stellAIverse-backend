@@ -5,17 +5,17 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   Index,
-} from 'typeorm';
+} from "typeorm";
 
 export enum UserRole {
-  USER = 'user',
-  OPERATOR = 'operator',
-  ADMIN = 'admin',
+  USER = "user",
+  OPERATOR = "operator",
+  ADMIN = "admin",
 }
 
-@Entity('users')
+@Entity("users")
 export class User {
-  @PrimaryGeneratedColumn('uuid')
+  @PrimaryGeneratedColumn("uuid")
   id: string;
 
   @Column({ unique: true, nullable: false })
@@ -30,7 +30,7 @@ export class User {
   emailVerified: boolean;
 
   @Column({
-    type: 'varchar',
+    type: "varchar",
     default: UserRole.USER,
   })
   role: UserRole;

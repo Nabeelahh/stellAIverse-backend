@@ -1,14 +1,10 @@
-import { CacheEntry, CacheVersionDto } from '../dto/cache-config.dto';
+import { CacheEntry, CacheVersionDto } from "../dto/cache-config.dto";
 
 export interface ICacheStorage {
   /**
    * Set a cache entry with TTL
    */
-  set<T>(
-    key: string,
-    entry: CacheEntry<T>,
-    ttlMs?: number,
-  ): Promise<void>;
+  set<T>(key: string, entry: CacheEntry<T>, ttlMs?: number): Promise<void>;
 
   /**
    * Get a cache entry

@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable } from "@nestjs/common";
 
 export interface HealthStatus {
   status: string;
@@ -26,7 +26,7 @@ export class HealthService {
    */
   getLivenessStatus(): LivenessStatus {
     return {
-      status: 'alive',
+      status: "alive",
       timestamp: new Date().toISOString(),
       uptime: process.uptime(),
     };
@@ -37,10 +37,10 @@ export class HealthService {
    */
   getHealthStatus(): HealthStatus {
     return {
-      status: 'ok',
+      status: "ok",
       timestamp: new Date().toISOString(),
       uptime: process.uptime(),
-      version: process.env.npm_package_version || '0.1.0',
+      version: process.env.npm_package_version || "0.1.0",
     };
   }
 

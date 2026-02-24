@@ -1,5 +1,5 @@
-import { Injectable, Logger, Optional } from '@nestjs/common';
-import { OnEvent } from '@nestjs/event-emitter';
+import { Injectable, Logger, Optional } from "@nestjs/common";
+import { OnEvent } from "@nestjs/event-emitter";
 
 @Injectable()
 export class CacheMetricsService {
@@ -13,16 +13,14 @@ export class CacheMetricsService {
     avgMissLatency: 0,
   };
 
-  constructor(
-    @Optional() private readonly prometheusService?: any,
-  ) {
+  constructor(@Optional() private readonly prometheusService?: any) {
     this.initializeMetrics();
   }
 
   private initializeMetrics(): void {
     // Initialize Prometheus metrics
     if (this.prometheusService) {
-      this.logger.debug('Initializing cache metrics with Prometheus');
+      this.logger.debug("Initializing cache metrics with Prometheus");
       // TODO: Register custom metrics
     }
   }
@@ -30,7 +28,7 @@ export class CacheMetricsService {
   /**
    * Record cache hit
    */
-  @OnEvent('compute.job.cache.hit')
+  @OnEvent("compute.job.cache.hit")
   recordCacheHit(payload: { jobId: string; jobType: string }): void {
     this.logger.debug(`Cache hit recorded for job: ${payload.jobId}`);
     // TODO: Increment Prometheus counter
@@ -39,7 +37,7 @@ export class CacheMetricsService {
   /**
    * Record cache miss
    */
-  @OnEvent('compute.job.cache.miss')
+  @OnEvent("compute.job.cache.miss")
   recordCacheMiss(payload: { jobId: string; jobType: string }): void {
     this.logger.debug(`Cache miss recorded for job: ${payload.jobId}`);
     // TODO: Increment Prometheus counter
@@ -48,11 +46,8 @@ export class CacheMetricsService {
   /**
    * Record cache eviction
    */
-  @OnEvent('cache.entry.evicted')
-  recordCacheEviction(payload: {
-    cacheKey: string;
-    reason: string;
-  }): void {
+  @OnEvent("cache.entry.evicted")
+  recordCacheEviction(payload: { cacheKey: string; reason: string }): void {
     this.metrics.cacheEvictionTotal++;
     this.logger.debug(`Cache eviction recorded: ${payload.cacheKey}`);
     // TODO: Increment Prometheus counter
@@ -61,7 +56,7 @@ export class CacheMetricsService {
   /**
    * Update cache size metrics
    */
-  @OnEvent('cache.metrics.updated')
+  @OnEvent("cache.metrics.updated")
   updateCacheMetrics(payload: {
     totalSize: number;
     entryCount: number;
@@ -102,6 +97,6 @@ export class CacheMetricsService {
       avgHitLatency: 0,
       avgMissLatency: 0,
     };
-    this.logger.log('Cache metrics reset');
+    this.logger.log("Cache metrics reset");
   }
 }

@@ -1,10 +1,10 @@
-import { Injectable, Logger, BadRequestException } from '@nestjs/common';
-import { InjectQueue } from '@nestjs/bull';
-import { Queue, Job, JobOptions } from 'bull';
-import { RetryPolicyService } from './retry-policy.service';
-import { BatchStrategy } from './dto/batch-job.dto';
+import { Injectable, Logger, BadRequestException } from "@nestjs/common";
+import { InjectQueue } from "@nestjs/bull";
+import { Queue, Job, JobOptions } from "bull";
+import { RetryPolicyService } from "./retry-policy.service";
+import { BatchStrategy } from "./dto/batch-job.dto";
 
-import { CacheConfigDto } from '../cache/dto/cache-config.dto';
+import { CacheConfigDto } from "../cache/dto/cache-config.dto";
 
 export interface ComputeJobData {
   type: string;
@@ -43,11 +43,11 @@ export interface BatchJobProgress {
   totalJobs: number;
   completedJobs: number;
   failedJobs: number;
-  status: 'running' | 'completed' | 'failed' | 'cancelled';
+  status: "running" | "completed" | "failed" | "cancelled";
   results: Array<{
     jobId: string;
     originalJobId?: string;
-    status: 'pending' | 'active' | 'completed' | 'failed';
+    status: "pending" | "active" | "completed" | "failed";
     result?: any;
     error?: string;
   }>;
@@ -60,9 +60,9 @@ export class QueueService {
   private readonly logger = new Logger(QueueService.name);
 
   constructor(
-    @InjectQueue('compute-jobs')
+    @InjectQueue("compute-jobs")
     private readonly computeQueue: Queue<ComputeJobData>,
-    @InjectQueue('dead-letter-queue')
+    @InjectQueue("dead-letter-queue")
     private readonly deadLetterQueue: Queue<ComputeJobData>,
     private readonly retryPolicyService: RetryPolicyService,
   ) {}
@@ -89,7 +89,9 @@ export class QueueService {
         jobId: options?.jobId || this.generateJobId(normalizedData),
       });
 
-      this.logger.log(`Job added: ${job.id} (type: ${data.type}, priority: ${priority})`);
+      this.logger.log(
+        `Job added: ${job.id} (type: ${data.type}, priority: ${priority})`,
+      );
       return job;
     } catch (error) {
       this.logger.error(`Failed to add job: ${error.message}`, error.stack);
@@ -100,7 +102,10 @@ export class QueueService {
   /**
    * Calculate dynamic priority based on various factors
    */
-  private calculateDynamicPriority(data: ComputeJobData, explicitPriority?: number): number {
+  private calculateDynamicPriority(
+    data: ComputeJobData,
+    explicitPriority?: number,
+  ): number {
     if (explicitPriority !== undefined) {
       return explicitPriority;
     }
@@ -110,16 +115,16 @@ export class QueueService {
 
     // Adjust priority based on job type
     switch (data.type) {
-      case 'email-notification':
+      case "email-notification":
         priority = 8;
         break;
-      case 'data-processing':
+      case "data-processing":
         priority = 12;
         break;
-      case 'ai-computation':
+      case "ai-computation":
         priority = 15;
         break;
-      case 'batch-operation':
+      case "batch-operation":
         priority = 5;
         break;
       default:
@@ -128,13 +133,13 @@ export class QueueService {
 
     // Adjust based on user role/priority (if available)
     if (data.userId) {
-      if (data.userId.startsWith('premium-')) {
+      if (data.userId.startsWith("premium-")) {
         priority = Math.max(1, priority - 3);
       }
     }
 
     // Adjust based on size of payload (larger payloads get lower priority)
-    if (data.payload && typeof data.payload === 'object') {
+    if (data.payload && typeof data.payload === "object") {
       const payloadSize = JSON.stringify(data.payload).length;
       if (payloadSize > 10000) {
         priority += 5;
@@ -218,7 +223,7 @@ export class QueueService {
   ): Promise<void> {
     try {
       await this.deadLetterQueue.add(
-        'dead-letter',
+        "dead-letter",
         {
           ...job.data,
           metadata: {
@@ -232,7 +237,9 @@ export class QueueService {
         { priority: 1 },
       );
 
-      this.logger.warn(`Job ${job.id} moved to dead letter queue. Reason: ${reason}`);
+      this.logger.warn(
+        `Job ${job.id} moved to dead letter queue. Reason: ${reason}`,
+      );
     } catch (error) {
       this.logger.error(
         `Failed to move job ${job.id} to dead letter queue: ${error.message}`,
@@ -273,7 +280,7 @@ export class QueueService {
    */
   async getDeadLetterJobs(start = 0, end = 10): Promise<Job<ComputeJobData>[]> {
     return this.deadLetterQueue.getJobs(
-      ['waiting', 'active', 'completed', 'failed'],
+      ["waiting", "active", "completed", "failed"],
       start,
       end,
     );
@@ -283,7 +290,7 @@ export class QueueService {
    * Clean old jobs
    */
   async cleanOldJobs(grace: number = 86400000): Promise<void> {
-    await this.computeQueue.clean(grace, 'completed');
+    await this.computeQueue.clean(grace, "completed");
     this.logger.log(`Cleaned completed jobs older than ${grace}ms`);
   }
 
@@ -292,7 +299,7 @@ export class QueueService {
    */
   async pauseQueue(): Promise<void> {
     await this.computeQueue.pause();
-    this.logger.log('Compute queue paused');
+    this.logger.log("Compute queue paused");
   }
 
   /**
@@ -300,7 +307,7 @@ export class QueueService {
    */
   async resumeQueue(): Promise<void> {
     await this.computeQueue.resume();
-    this.logger.log('Compute queue resumed');
+    this.logger.log("Compute queue resumed");
   }
 
   /**
@@ -308,7 +315,7 @@ export class QueueService {
    */
   async emptyQueue(): Promise<void> {
     await this.computeQueue.empty();
-    this.logger.warn('Compute queue emptied');
+    this.logger.warn("Compute queue emptied");
   }
 
   /**
@@ -318,7 +325,7 @@ export class QueueService {
     const { batchId, config, jobs, userId } = batchJobData;
 
     if (!jobs || jobs.length === 0) {
-      throw new BadRequestException('Batch jobs cannot be empty');
+      throw new BadRequestException("Batch jobs cannot be empty");
     }
 
     const progress: BatchJobProgress = {
@@ -326,10 +333,10 @@ export class QueueService {
       totalJobs: jobs.length,
       completedJobs: 0,
       failedJobs: 0,
-      status: 'running',
+      status: "running",
       results: jobs.map((_, index) => ({
         jobId: `${batchId}-job-${index}`,
-        status: 'pending',
+        status: "pending",
       })),
       startedAt: new Date(),
     };
@@ -338,13 +345,13 @@ export class QueueService {
 
     try {
       switch (config.strategy) {
-        case 'sequential':
+        case "sequential":
           await this.processSequentially(batchId, jobs, config, userId);
           break;
-        case 'parallel':
+        case "parallel":
           await this.processInParallel(batchId, jobs, config, userId);
           break;
-        case 'priority-based':
+        case "priority-based":
           await this.processByPriority(batchId, jobs, config, userId);
           break;
         default:
@@ -353,8 +360,11 @@ export class QueueService {
 
       return progress;
     } catch (error) {
-      this.logger.error(`Batch job ${batchId} failed: ${error.message}`, error.stack);
-      progress.status = 'failed';
+      this.logger.error(
+        `Batch job ${batchId} failed: ${error.message}`,
+        error.stack,
+      );
+      progress.status = "failed";
       this.updateBatchProgress(batchId, progress);
       throw error;
     }
@@ -363,7 +373,7 @@ export class QueueService {
   private async processSequentially(
     batchId: string,
     jobs: ComputeJobData[],
-    config: BatchJobData['config'],
+    config: BatchJobData["config"],
     userId?: string,
   ): Promise<void> {
     for (let i = 0; i < jobs.length; i++) {
@@ -382,13 +392,15 @@ export class QueueService {
 
         const progress = this.getBatchProgress(batchId);
         if (progress) {
-          const jobIndex = progress.results.findIndex(r => r.jobId.includes(`-job-${i}`));
+          const jobIndex = progress.results.findIndex((r) =>
+            r.jobId.includes(`-job-${i}`),
+          );
           if (jobIndex !== -1) {
             progress.results[jobIndex] = {
               ...progress.results[jobIndex],
-              jobId: String(job.id),           // FIX: JobId → string
+              jobId: String(job.id), // FIX: JobId → string
               originalJobId: `${batchId}-job-${i}`,
-              status: 'completed',
+              status: "completed",
               result,
             };
             progress.completedJobs++;
@@ -398,18 +410,20 @@ export class QueueService {
       } catch (error) {
         const progress = this.getBatchProgress(batchId);
         if (progress) {
-          const jobIndex = progress.results.findIndex(r => r.jobId.includes(`-job-${i}`));
+          const jobIndex = progress.results.findIndex((r) =>
+            r.jobId.includes(`-job-${i}`),
+          );
           if (jobIndex !== -1) {
             progress.results[jobIndex] = {
               ...progress.results[jobIndex],
               jobId: `${batchId}-job-${i}`,
-              status: 'failed',
+              status: "failed",
               error: error.message,
             };
             progress.failedJobs++;
 
             if (!config.continueOnError) {
-              progress.status = 'failed';
+              progress.status = "failed";
               this.updateBatchProgress(batchId, progress);
               throw error;
             }
@@ -421,7 +435,7 @@ export class QueueService {
 
     const progress = this.getBatchProgress(batchId);
     if (progress) {
-      progress.status = 'completed';
+      progress.status = "completed";
       progress.completedAt = new Date();
       this.updateBatchProgress(batchId, progress);
     }
@@ -430,7 +444,7 @@ export class QueueService {
   private async processInParallel(
     batchId: string,
     jobs: ComputeJobData[],
-    config: BatchJobData['config'],
+    config: BatchJobData["config"],
     userId?: string,
   ): Promise<void> {
     const concurrency = config.maxConcurrency || 5;
@@ -454,13 +468,15 @@ export class QueueService {
           const result = await job.finished();
 
           if (progress) {
-            const jobIndex = progress.results.findIndex(r => r.jobId.includes(`-job-${actualIndex}`));
+            const jobIndex = progress.results.findIndex((r) =>
+              r.jobId.includes(`-job-${actualIndex}`),
+            );
             if (jobIndex !== -1) {
               progress.results[jobIndex] = {
                 ...progress.results[jobIndex],
-                jobId: String(job.id),         // FIX: JobId → string
+                jobId: String(job.id), // FIX: JobId → string
                 originalJobId: `${batchId}-job-${actualIndex}`,
-                status: 'completed',
+                status: "completed",
                 result,
               };
               progress.completedJobs++;
@@ -469,18 +485,20 @@ export class QueueService {
           }
         } catch (error) {
           if (progress) {
-            const jobIndex = progress.results.findIndex(r => r.jobId.includes(`-job-${actualIndex}`));
+            const jobIndex = progress.results.findIndex((r) =>
+              r.jobId.includes(`-job-${actualIndex}`),
+            );
             if (jobIndex !== -1) {
               progress.results[jobIndex] = {
                 ...progress.results[jobIndex],
                 jobId: `${batchId}-job-${actualIndex}`,
-                status: 'failed',
+                status: "failed",
                 error: error.message,
               };
               progress.failedJobs++;
 
               if (!config.continueOnError) {
-                progress.status = 'failed';
+                progress.status = "failed";
                 this.updateBatchProgress(batchId, progress);
                 throw error;
               }
@@ -494,7 +512,7 @@ export class QueueService {
     }
 
     if (progress) {
-      progress.status = 'completed';
+      progress.status = "completed";
       progress.completedAt = new Date();
       this.updateBatchProgress(batchId, progress);
     }
@@ -503,7 +521,7 @@ export class QueueService {
   private async processByPriority(
     batchId: string,
     jobs: ComputeJobData[],
-    config: BatchJobData['config'],
+    config: BatchJobData["config"],
     userId?: string,
   ): Promise<void> {
     // Sort jobs by priority (lower number = higher priority)
@@ -530,13 +548,15 @@ export class QueueService {
         const originalIndex = jobs.indexOf(jobData);
         const progress = this.getBatchProgress(batchId);
         if (progress && originalIndex !== -1) {
-          const jobIndex = progress.results.findIndex(r => r.jobId.includes(`-job-${originalIndex}`));
+          const jobIndex = progress.results.findIndex((r) =>
+            r.jobId.includes(`-job-${originalIndex}`),
+          );
           if (jobIndex !== -1) {
             progress.results[jobIndex] = {
               ...progress.results[jobIndex],
-              jobId: String(job.id),           // FIX: JobId → string
+              jobId: String(job.id), // FIX: JobId → string
               originalJobId: `${batchId}-job-${originalIndex}`,
-              status: 'completed',
+              status: "completed",
               result,
             };
             progress.completedJobs++;
@@ -547,18 +567,20 @@ export class QueueService {
         const originalIndex = jobs.indexOf(jobData);
         const progress = this.getBatchProgress(batchId);
         if (progress && originalIndex !== -1) {
-          const jobIndex = progress.results.findIndex(r => r.jobId.includes(`-job-${originalIndex}`));
+          const jobIndex = progress.results.findIndex((r) =>
+            r.jobId.includes(`-job-${originalIndex}`),
+          );
           if (jobIndex !== -1) {
             progress.results[jobIndex] = {
               ...progress.results[jobIndex],
               jobId: `${batchId}-job-${originalIndex}`,
-              status: 'failed',
+              status: "failed",
               error: error.message,
             };
             progress.failedJobs++;
 
             if (!config.continueOnError) {
-              progress.status = 'failed';
+              progress.status = "failed";
               this.updateBatchProgress(batchId, progress);
               throw error;
             }
@@ -570,7 +592,7 @@ export class QueueService {
 
     const progress = this.getBatchProgress(batchId);
     if (progress) {
-      progress.status = 'completed';
+      progress.status = "completed";
       progress.completedAt = new Date();
       this.updateBatchProgress(batchId, progress);
     }
@@ -587,7 +609,10 @@ export class QueueService {
     return this.batchProgressStore.get(batchId);
   }
 
-  private updateBatchProgress(batchId: string, progress: BatchJobProgress): void {
+  private updateBatchProgress(
+    batchId: string,
+    progress: BatchJobProgress,
+  ): void {
     this.batchProgressStore.set(batchId, progress);
   }
 
@@ -606,7 +631,7 @@ export class QueueService {
     if (!progress) {
       throw new Error(`Batch job ${batchId} not found`);
     }
-    progress.status = 'cancelled';
+    progress.status = "cancelled";
     progress.completedAt = new Date();
     this.batchProgressStore.set(batchId, progress);
   }
@@ -621,7 +646,7 @@ export class QueueService {
       await client.ping();
       return true;
     } catch (error) {
-      this.logger.error('Redis health check failed', error.message);
+      this.logger.error("Redis health check failed", error.message);
       return false;
     }
   }
@@ -631,9 +656,9 @@ export class QueueService {
    */
   private generateJobId(data: ComputeJobData): string {
     const timestamp = Date.now();
-    const userId = data.userId || 'anonymous';
+    const userId = data.userId || "anonymous";
     const type = data.type;
-    const groupKeySegment = data.groupKey ? `${data.groupKey}-` : '';
+    const groupKeySegment = data.groupKey ? `${data.groupKey}-` : "";
     return `${groupKeySegment}${type}-${userId}-${timestamp}`;
   }
 
