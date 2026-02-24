@@ -1,8 +1,8 @@
-import { Injectable, LoggerService } from '@nestjs/common';
+import { Injectable, LoggerService } from "@nestjs/common";
 
 interface LogEntry {
   timestamp: number;
-  level: 'log' | 'error' | 'warn' | 'debug' | 'verbose';
+  level: "log" | "error" | "warn" | "debug" | "verbose";
   context: string;
   message: string;
   data?: any;
@@ -17,42 +17,42 @@ export class SimulationLogger implements LoggerService {
    * Log a message
    */
   log(message: string, context?: string, data?: any) {
-    this.addLog('log', message, context || 'Simulator', data);
+    this.addLog("log", message, context || "Simulator", data);
   }
 
   /**
    * Log an error
    */
   error(message: string, trace?: string, context?: string) {
-    this.addLog('error', message, context || 'Simulator', { trace });
+    this.addLog("error", message, context || "Simulator", { trace });
   }
 
   /**
    * Log a warning
    */
   warn(message: string, context?: string, data?: any) {
-    this.addLog('warn', message, context || 'Simulator', data);
+    this.addLog("warn", message, context || "Simulator", data);
   }
 
   /**
    * Log debug information
    */
   debug(message: string, context?: string, data?: any) {
-    this.addLog('debug', message, context || 'Simulator', data);
+    this.addLog("debug", message, context || "Simulator", data);
   }
 
   /**
    * Log verbose information
    */
   verbose(message: string, context?: string, data?: any) {
-    this.addLog('verbose', message, context || 'Simulator', data);
+    this.addLog("verbose", message, context || "Simulator", data);
   }
 
   /**
    * Add log entry
    */
   private addLog(
-    level: 'log' | 'error' | 'warn' | 'debug' | 'verbose',
+    level: "log" | "error" | "warn" | "debug" | "verbose",
     message: string,
     context: string,
     data?: any,
@@ -70,8 +70,11 @@ export class SimulationLogger implements LoggerService {
     this.logs.push(entry);
 
     // Also log to console in development
-    if (process.env.NODE_ENV !== 'production') {
-      console[level === 'log' ? 'log' : level](`[${context}] ${message}`, data || '');
+    if (process.env.NODE_ENV !== "production") {
+      console[level === "log" ? "log" : level](
+        `[${context}] ${message}`,
+        data || "",
+      );
     }
   }
 
@@ -86,14 +89,14 @@ export class SimulationLogger implements LoggerService {
    * Get logs filtered by level
    */
   getLogsByLevel(level: string): LogEntry[] {
-    return this.logs.filter(log => log.level === level);
+    return this.logs.filter((log) => log.level === level);
   }
 
   /**
    * Get logs filtered by context
    */
   getLogsByContext(context: string): LogEntry[] {
-    return this.logs.filter(log => log.context === context);
+    return this.logs.filter((log) => log.context === context);
   }
 
   /**
@@ -123,11 +126,11 @@ export class SimulationLogger implements LoggerService {
   getLogStats() {
     return {
       total: this.logs.length,
-      log: this.logs.filter(l => l.level === 'log').length,
-      error: this.logs.filter(l => l.level === 'error').length,
-      warn: this.logs.filter(l => l.level === 'warn').length,
-      debug: this.logs.filter(l => l.level === 'debug').length,
-      verbose: this.logs.filter(l => l.level === 'verbose').length,
+      log: this.logs.filter((l) => l.level === "log").length,
+      error: this.logs.filter((l) => l.level === "error").length,
+      warn: this.logs.filter((l) => l.level === "warn").length,
+      debug: this.logs.filter((l) => l.level === "debug").length,
+      verbose: this.logs.filter((l) => l.level === "verbose").length,
     };
   }
 }

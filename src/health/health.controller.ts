@@ -1,11 +1,11 @@
-import { Controller, Get, HttpStatus, HttpCode } from '@nestjs/common';
-import { HealthCheck, HealthCheckService } from '@nestjs/terminus';
-import { HealthService } from './health.service';
-import { DatabaseHealthIndicator } from './indicators/database.health-indicator';
-import { QueueHealthIndicator } from './indicators/queue.health-indicator';
-import { OpenAIProviderHealthIndicator } from './indicators/openai-provider.health-indicator';
+import { Controller, Get, HttpStatus, HttpCode } from "@nestjs/common";
+import { HealthCheck, HealthCheckService } from "@nestjs/terminus";
+import { HealthService } from "./health.service";
+import { DatabaseHealthIndicator } from "./indicators/database.health-indicator";
+import { QueueHealthIndicator } from "./indicators/queue.health-indicator";
+import { OpenAIProviderHealthIndicator } from "./indicators/openai-provider.health-indicator";
 
-@Controller('health')
+@Controller("health")
 export class HealthController {
   constructor(
     private readonly healthService: HealthService,
@@ -19,7 +19,7 @@ export class HealthController {
    * Liveness probe - returns 200 when process is running
    * No dependency checks, just confirms the process is alive
    */
-  @Get('liveness')
+  @Get("liveness")
   @HttpCode(HttpStatus.OK)
   getLiveness() {
     return this.healthService.getLivenessStatus();
@@ -29,13 +29,13 @@ export class HealthController {
    * Readiness probe - returns 200 only when all dependencies are healthy
    * Checks: Database, Redis/Queue, External Providers (OpenAI)
    */
-  @Get('readiness')
+  @Get("readiness")
   @HealthCheck()
   async getReadiness() {
     return this.health.check([
-      () => this.databaseHealthIndicator.isHealthy('database'),
-      () => this.queueHealthIndicator.isHealthy('queue'),
-      () => this.openAIProviderHealthIndicator.isHealthy('openai'),
+      () => this.databaseHealthIndicator.isHealthy("database"),
+      () => this.queueHealthIndicator.isHealthy("queue"),
+      () => this.openAIProviderHealthIndicator.isHealthy("openai"),
     ]);
   }
 

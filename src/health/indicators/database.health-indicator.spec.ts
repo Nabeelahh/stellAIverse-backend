@@ -1,9 +1,9 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { DatabaseHealthIndicator } from './database.health-indicator';
-import { DataSource } from 'typeorm';
-import { HealthCheckError } from '@nestjs/terminus';
+import { Test, TestingModule } from "@nestjs/testing";
+import { DatabaseHealthIndicator } from "./database.health-indicator";
+import { DataSource } from "typeorm";
+import { HealthCheckError } from "@nestjs/terminus";
 
-describe('DatabaseHealthIndicator', () => {
+describe("DatabaseHealthIndicator", () => {
   let indicator: DatabaseHealthIndicator;
   let dataSource: DataSource;
 
@@ -28,40 +28,42 @@ describe('DatabaseHealthIndicator', () => {
     jest.clearAllMocks();
   });
 
-  describe('isHealthy', () => {
-    it('should return healthy status when database query succeeds', async () => {
-      mockDataSource.query.mockResolvedValue([{ '?column?': 1 }]);
+  describe("isHealthy", () => {
+    it("should return healthy status when database query succeeds", async () => {
+      mockDataSource.query.mockResolvedValue([{ "?column?": 1 }]);
 
-      const result = await indicator.isHealthy('database');
+      const result = await indicator.isHealthy("database");
 
       expect(result).toEqual({
         database: {
-          status: 'up',
-          message: 'Database connection is healthy',
+          status: "up",
+          message: "Database connection is healthy",
         },
       });
-      expect(mockDataSource.query).toHaveBeenCalledWith('SELECT 1');
+      expect(mockDataSource.query).toHaveBeenCalledWith("SELECT 1");
     });
 
-    it('should throw HealthCheckError when database query fails', async () => {
-      const error = new Error('Connection refused');
+    it("should throw HealthCheckError when database query fails", async () => {
+      const error = new Error("Connection refused");
       mockDataSource.query.mockRejectedValue(error);
 
-      await expect(indicator.isHealthy('database')).rejects.toThrow(HealthCheckError);
+      await expect(indicator.isHealthy("database")).rejects.toThrow(
+        HealthCheckError,
+      );
     });
 
-    it('should include error message in failed health check', async () => {
-      const errorMessage = 'Connection timeout';
+    it("should include error message in failed health check", async () => {
+      const errorMessage = "Connection timeout";
       mockDataSource.query.mockRejectedValue(new Error(errorMessage));
 
       try {
-        await indicator.isHealthy('database');
-        fail('Expected HealthCheckError to be thrown');
+        await indicator.isHealthy("database");
+        fail("Expected HealthCheckError to be thrown");
       } catch (error) {
         expect(error).toBeInstanceOf(HealthCheckError);
         expect(error.causes).toEqual({
           database: {
-            status: 'down',
+            status: "down",
             message: `Database connection failed: ${errorMessage}`,
           },
         });

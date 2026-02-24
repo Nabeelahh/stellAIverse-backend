@@ -1,7 +1,7 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { Job } from 'bull';
-import { CacheService } from '../cache.service';
-import { CacheConfigDto } from '../dto/cache-config.dto';
+import { Injectable, Logger } from "@nestjs/common";
+import { Job } from "bull";
+import { CacheService } from "../cache.service";
+import { CacheConfigDto } from "../dto/cache-config.dto";
 
 export interface ComputeJobData {
   type: string;
@@ -76,7 +76,7 @@ export class CacheJobPlugin {
 
       // Skip caching if disabled
       if (!cacheConfig?.enabled) {
-        return { cacheKey: '', cached: false };
+        return { cacheKey: "", cached: false };
       }
 
       const cacheResult = await this.cacheService.set<T>(
@@ -94,7 +94,7 @@ export class CacheJobPlugin {
         `Error storing cache result for job ${job.id}: ${error.message}`,
         error.stack,
       );
-      return { cacheKey: '', cached: false };
+      return { cacheKey: "", cached: false };
     }
   }
 
@@ -132,13 +132,13 @@ export class CacheJobPlugin {
    */
   emitCacheEvent(eventType: string, payload: any): void {
     switch (eventType) {
-      case 'HIT':
+      case "HIT":
         this.logger.debug(`Cache hit event: ${JSON.stringify(payload)}`);
         break;
-      case 'MISS':
+      case "MISS":
         this.logger.debug(`Cache miss event: ${JSON.stringify(payload)}`);
         break;
-      case 'STORED':
+      case "STORED":
         this.logger.debug(`Cache stored event: ${JSON.stringify(payload)}`);
         break;
       default:

@@ -1,12 +1,16 @@
-import {Test, TestingModule} from '@nestjs/testing';
-import {ConfigService} from '@nestjs/config';
-import {EventEmitterModule} from '@nestjs/event-emitter';
-import {CacheService} from './cache.service';
-import {CacheConfigDto, CacheVersionDto, CompressionAlgorithm} from './dto/cache-config.dto';
-import {MemoryCacheBackend} from './backends/memory.backend';
-import {CacheUtils} from './utils/cache.utils';
+import { Test, TestingModule } from "@nestjs/testing";
+import { ConfigService } from "@nestjs/config";
+import { EventEmitterModule } from "@nestjs/event-emitter";
+import { CacheService } from "./cache.service";
+import {
+  CacheConfigDto,
+  CacheVersionDto,
+  CompressionAlgorithm,
+} from "./dto/cache-config.dto";
+import { MemoryCacheBackend } from "./backends/memory.backend";
+import { CacheUtils } from "./utils/cache.utils";
 
-describe('CacheService', () => {
+describe("CacheService", () => {
   let service: CacheService;
   let configService: ConfigService;
 
@@ -32,9 +36,9 @@ describe('CacheService', () => {
     await service.clear();
   });
 
-  describe('Cache Operations', () => {
-    it('should set and get cache entries', async () => {
-      const jobType = 'data-processing';
+  describe("Cache Operations", () => {
+    it("should set and get cache entries", async () => {
+      const jobType = "data-processing";
       const payload = { records: [{ id: 1 }] };
       const result = { processed: true, count: 1 };
 
@@ -48,16 +52,16 @@ describe('CacheService', () => {
       expect(getCacheResult?.data).toEqual(result);
     });
 
-    it('should handle cache miss', async () => {
-      const jobType = 'ai-computation';
-      const payload = { model: 'gpt-4', prompt: 'test' };
+    it("should handle cache miss", async () => {
+      const jobType = "ai-computation";
+      const payload = { model: "gpt-4", prompt: "test" };
 
       const result = await service.get(jobType, payload);
       expect(result).toBeNull();
     });
 
-    it('should track cache hits and misses', async () => {
-      const jobType = 'data-processing';
+    it("should track cache hits and misses", async () => {
+      const jobType = "data-processing";
       const payload = { test: true };
       const result = { success: true };
 
@@ -73,8 +77,8 @@ describe('CacheService', () => {
       expect(metrics.cacheHits).toBe(1);
     });
 
-    it('should invalidate cache by entry', async () => {
-      const jobType = 'data-processing';
+    it("should invalidate cache by entry", async () => {
+      const jobType = "data-processing";
       const payload = { records: [{ id: 1 }] };
       const result = { processed: true };
 
@@ -87,8 +91,8 @@ describe('CacheService', () => {
       expect(afterClear).toBeNull();
     });
 
-    it('should invalidate cache by job type', async () => {
-      const jobType = 'data-processing';
+    it("should invalidate cache by job type", async () => {
+      const jobType = "data-processing";
       const payload1 = { id: 1 };
       const payload2 = { id: 2 };
       const result = { success: true };
@@ -105,24 +109,28 @@ describe('CacheService', () => {
       expect(result2).toBeNull();
     });
 
-    it('should invalidate cache by tags', async () => {
-      const jobType = 'data-processing';
+    it("should invalidate cache by tags", async () => {
+      const jobType = "data-processing";
       const payload = { test: true };
       const result = { success: true };
       const config = new CacheConfigDto();
-      config.tags = ['production', 'critical'];
+      config.tags = ["production", "critical"];
 
       await service.set(jobType, payload, result, undefined, undefined, config);
 
-      const invalidatedCount = await service.invalidateByTags(['production']);
+      const invalidatedCount = await service.invalidateByTags(["production"]);
       expect(invalidatedCount).toBe(1);
 
       const getCacheResult = await service.get(jobType, payload);
       expect(getCacheResult).toBeNull();
     });
 
-    it('should clear all cache', async () => {
-      const jobTypes = ['data-processing', 'ai-computation', 'report-generation'];
+    it("should clear all cache", async () => {
+      const jobTypes = [
+        "data-processing",
+        "ai-computation",
+        "report-generation",
+      ];
       const payload = { test: true };
       const result = { success: true };
 
@@ -139,11 +147,11 @@ describe('CacheService', () => {
     });
   });
 
-  describe('Compression', () => {
-    it('should compress large payloads', async () => {
-      const jobType = 'data-processing';
+  describe("Compression", () => {
+    it("should compress large payloads", async () => {
+      const jobType = "data-processing";
       const largePayload = {
-        data: Array(1000).fill({ id: 1, name: 'test', value: 123.456 }),
+        data: Array(1000).fill({ id: 1, name: "test", value: 123.456 }),
       };
       const result = { processed: true, itemsProcessed: 1000 };
 
@@ -166,8 +174,8 @@ describe('CacheService', () => {
       expect(getCacheResult?.data).toEqual(result);
     });
 
-    it('should skip compression for small payloads', async () => {
-      const jobType = 'data-processing';
+    it("should skip compression for small payloads", async () => {
+      const jobType = "data-processing";
       const payload = { small: true };
       const result = { success: true };
 
@@ -190,9 +198,9 @@ describe('CacheService', () => {
     });
   });
 
-  describe('TTL and Expiration', () => {
-    it('should respect TTL settings', async () => {
-      const jobType = 'data-processing';
+  describe("TTL and Expiration", () => {
+    it("should respect TTL settings", async () => {
+      const jobType = "data-processing";
       const payload = { test: true };
       const result = { success: true };
 
@@ -212,56 +220,58 @@ describe('CacheService', () => {
     });
   });
 
-  describe('Versioning', () => {
-    it('should handle cache versioning', async () => {
-      const jobType = 'data-processing';
+  describe("Versioning", () => {
+    it("should handle cache versioning", async () => {
+      const jobType = "data-processing";
       const payload = { test: true };
       const result = { success: true };
 
       const version1: CacheVersionDto = {
-        jobDefinitionHash: 'hash-v1',
+        jobDefinitionHash: "hash-v1",
         schemaVersion: 1,
-        providerVersion: 'v1',
+        providerVersion: "v1",
       };
 
       const config = new CacheConfigDto();
       await service.set(jobType, payload, result, undefined, undefined, config);
 
       const version2: CacheVersionDto = {
-        jobDefinitionHash: 'hash-v2',
+        jobDefinitionHash: "hash-v2",
         schemaVersion: 2,
-        providerVersion: 'v1',
+        providerVersion: "v1",
       };
 
-      const invalidatedCount =
-        await service.validateAndInvalidateOldVersions(jobType, version2);
+      const invalidatedCount = await service.validateAndInvalidateOldVersions(
+        jobType,
+        version2,
+      );
       expect(invalidatedCount).toBeGreaterThanOrEqual(0);
     });
   });
 
-  describe('Dependency Tracking', () => {
-    it('should track dependencies', async () => {
-      const jobType = 'data-processing';
+  describe("Dependency Tracking", () => {
+    it("should track dependencies", async () => {
+      const jobType = "data-processing";
       const payload = { test: true };
       const result = { success: true };
 
       const config = new CacheConfigDto();
-      config.dependencies = ['upstream-job-1', 'upstream-job-2'];
+      config.dependencies = ["upstream-job-1", "upstream-job-2"];
 
       const setCacheResult = await service.set(
         jobType,
         payload,
         result,
-        'downstream-job-1',
+        "downstream-job-1",
         undefined,
         config,
       );
       expect(setCacheResult.cached).toBe(true);
     });
 
-    it('should invalidate dependents', async () => {
-      const upstreamJobId = 'upstream-job-1';
-      const downstreamJobType = 'data-processing';
+    it("should invalidate dependents", async () => {
+      const upstreamJobId = "upstream-job-1";
+      const downstreamJobType = "data-processing";
       const payload = { test: true };
       const result = { success: true };
 
@@ -272,7 +282,7 @@ describe('CacheService', () => {
         downstreamJobType,
         payload,
         result,
-        'downstream-job-1',
+        "downstream-job-1",
         undefined,
         config,
       );
@@ -289,9 +299,9 @@ describe('CacheService', () => {
     });
   });
 
-  describe('Content Addressable Versioning', () => {
-    it('should generate consistent cache keys for same content', () => {
-      const jobType = 'data-processing';
+  describe("Content Addressable Versioning", () => {
+    it("should generate consistent cache keys for same content", () => {
+      const jobType = "data-processing";
       const payload = { records: [{ id: 1 }] };
 
       const hash1 = CacheUtils.generateContentHash(jobType, payload);
@@ -300,8 +310,8 @@ describe('CacheService', () => {
       expect(hash1).toBe(hash2);
     });
 
-    it('should generate different cache keys for different content', () => {
-      const jobType = 'data-processing';
+    it("should generate different cache keys for different content", () => {
+      const jobType = "data-processing";
       const payload1 = { records: [{ id: 1 }] };
       const payload2 = { records: [{ id: 2 }] };
 
@@ -312,9 +322,9 @@ describe('CacheService', () => {
     });
   });
 
-  describe('Metrics', () => {
-    it('should track cache metrics', async () => {
-      const jobType = 'data-processing';
+  describe("Metrics", () => {
+    it("should track cache metrics", async () => {
+      const jobType = "data-processing";
       const payload = { test: true };
       const result = { success: true };
 
@@ -333,16 +343,16 @@ describe('CacheService', () => {
     });
   });
 
-  describe('Health Check', () => {
-    it('should perform health check', async () => {
+  describe("Health Check", () => {
+    it("should perform health check", async () => {
       const isHealthy = await service.health();
-      expect(typeof isHealthy).toBe('boolean');
+      expect(typeof isHealthy).toBe("boolean");
     });
   });
 
-  describe('Cache Configuration', () => {
-    it('should respect cache disabled setting', async () => {
-      const jobType = 'data-processing';
+  describe("Cache Configuration", () => {
+    it("should respect cache disabled setting", async () => {
+      const jobType = "data-processing";
       const payload = { test: true };
       const result = { success: true };
 
@@ -360,8 +370,8 @@ describe('CacheService', () => {
       expect(setCacheResult.cached).toBe(false);
     });
 
-    it('should respect skipCache setting', async () => {
-      const jobType = 'data-processing';
+    it("should respect skipCache setting", async () => {
+      const jobType = "data-processing";
       const payload = { test: true };
       const result = { success: true };
 
@@ -371,15 +381,22 @@ describe('CacheService', () => {
       // Set cache entry
       const setConfig = new CacheConfigDto();
       setConfig.skipCache = false;
-      await service.set(jobType, payload, result, undefined, undefined, setConfig);
+      await service.set(
+        jobType,
+        payload,
+        result,
+        undefined,
+        undefined,
+        setConfig,
+      );
 
       // Try to get with skipCache=true
       const getCacheResult = await service.get(jobType, payload);
       expect(getCacheResult).not.toBeNull();
     });
 
-    it('should handle cacheOnly mode', async () => {
-      const jobType = 'data-processing';
+    it("should handle cacheOnly mode", async () => {
+      const jobType = "data-processing";
       const payload = { test: true };
       const result = { success: true };
 

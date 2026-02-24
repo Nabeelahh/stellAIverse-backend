@@ -1,7 +1,10 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { CacheEntry, CacheVersionDto } from '../dto/cache-config.dto';
-import { ICacheStorage, CacheStorageConfig } from '../interfaces/cache-storage.interface';
-import { CacheUtils } from '../utils/cache.utils';
+import { Injectable, Logger } from "@nestjs/common";
+import { CacheEntry, CacheVersionDto } from "../dto/cache-config.dto";
+import {
+  ICacheStorage,
+  CacheStorageConfig,
+} from "../interfaces/cache-storage.interface";
+import { CacheUtils } from "../utils/cache.utils";
 
 /**
  * DynamoDB cache backend for persistent distributed caching
@@ -15,17 +18,17 @@ export class DynamoDBCacheBackend implements ICacheStorage {
 
   constructor(config: CacheStorageConfig) {
     this.config = {
-      region: 'us-east-1',
+      region: "us-east-1",
       ...config,
     };
 
     if (!this.config.enabled) {
-      this.logger.warn('DynamoDB cache backend is disabled');
+      this.logger.warn("DynamoDB cache backend is disabled");
       return;
     }
 
     this.logger.warn(
-      'DynamoDB cache backend is not yet implemented. Please install @aws-sdk/client-dynamodb',
+      "DynamoDB cache backend is not yet implemented. Please install @aws-sdk/client-dynamodb",
     );
     // TODO: Initialize DynamoDB client when AWS SDK is added
   }
@@ -86,7 +89,7 @@ export class DynamoDBCacheBackend implements ICacheStorage {
 
   async clear(): Promise<void> {
     // TODO: Implement DynamoDB scan and batch delete
-    this.logger.warn('Clear all cache entries from DynamoDB');
+    this.logger.warn("Clear all cache entries from DynamoDB");
   }
 
   async health(): Promise<boolean> {
@@ -112,6 +115,6 @@ export class DynamoDBCacheBackend implements ICacheStorage {
   }
 
   async disconnect(): Promise<void> {
-    this.logger.log('DynamoDB cache backend disconnected');
+    this.logger.log("DynamoDB cache backend disconnected");
   }
 }

@@ -145,8 +145,8 @@ export class OpenAIProviderAdapter {
 
     this.logger.debug(
       `Normalized prompt with ${request.messages.length} messages` +
-      `${request.functions ? `, ${request.functions.length} functions` : ""}` +
-      `${request.tools ? `, ${request.tools.length} tools` : ""}`,
+        `${request.functions ? `, ${request.functions.length} functions` : ""}` +
+        `${request.tools ? `, ${request.tools.length} tools` : ""}`,
     );
     return request;
   }
@@ -154,7 +154,9 @@ export class OpenAIProviderAdapter {
   /**
    * Normalize role names to OpenAI's expected format
    */
-  private normalizeRole(role: string): "system" | "user" | "assistant" | "tool" {
+  private normalizeRole(
+    role: string,
+  ): "system" | "user" | "assistant" | "tool" {
     const normalizedRole = role.toLowerCase();
     if (["system", "user", "assistant", "tool"].includes(normalizedRole)) {
       return normalizedRole as "system" | "user" | "assistant" | "tool";
@@ -214,9 +216,13 @@ export class OpenAIProviderAdapter {
 
       if (
         choice.finish_reason &&
-        !["stop", "length", "content_filter", "function_call", "tool_calls"].includes(
-          choice.finish_reason,
-        )
+        ![
+          "stop",
+          "length",
+          "content_filter",
+          "function_call",
+          "tool_calls",
+        ].includes(choice.finish_reason)
       ) {
         this.logger.warn(
           `Choice ${index} has unknown finish_reason: ${choice.finish_reason}`,

@@ -1,8 +1,11 @@
-import { Injectable, Logger } from '@nestjs/common';
-import Redis from 'ioredis';
-import { CacheEntry, CacheVersionDto } from '../dto/cache-config.dto';
-import { ICacheStorage, CacheStorageConfig } from '../interfaces/cache-storage.interface';
-import { CacheUtils } from '../utils/cache.utils';
+import { Injectable, Logger } from "@nestjs/common";
+import Redis from "ioredis";
+import { CacheEntry, CacheVersionDto } from "../dto/cache-config.dto";
+import {
+  ICacheStorage,
+  CacheStorageConfig,
+} from "../interfaces/cache-storage.interface";
+import { CacheUtils } from "../utils/cache.utils";
 
 @Injectable()
 export class RedisCacheBackend implements ICacheStorage {
@@ -12,7 +15,7 @@ export class RedisCacheBackend implements ICacheStorage {
 
   constructor(config: CacheStorageConfig) {
     this.config = {
-      host: 'localhost',
+      host: "localhost",
       port: 6379,
       db: 0,
       connectionTimeout: 5000,
@@ -26,7 +29,7 @@ export class RedisCacheBackend implements ICacheStorage {
 
   private initializeClient(): void {
     if (!this.config.enabled) {
-      this.logger.warn('Redis cache backend is disabled');
+      this.logger.warn("Redis cache backend is disabled");
       return;
     }
 
@@ -47,16 +50,16 @@ export class RedisCacheBackend implements ICacheStorage {
         enableOfflineQueue: true,
       });
 
-      this.client.on('error', (err) => {
+      this.client.on("error", (err) => {
         this.logger.error(`Redis client error: ${err.message}`, err.stack);
       });
 
-      this.client.on('connect', () => {
-        this.logger.log('Redis client connected');
+      this.client.on("connect", () => {
+        this.logger.log("Redis client connected");
       });
 
-      this.client.on('reconnecting', () => {
-        this.logger.warn('Redis client reconnecting');
+      this.client.on("reconnecting", () => {
+        this.logger.warn("Redis client reconnecting");
       });
     } catch (error) {
       this.logger.error(
@@ -77,9 +80,7 @@ export class RedisCacheBackend implements ICacheStorage {
       const value = JSON.stringify(entry);
 
       await this.client.setex(key, ttlSeconds, value);
-      this.logger.debug(
-        `Cache entry set: ${key} with TTL ${ttlSeconds}s`,
-      );
+      this.logger.debug(`Cache entry set: ${key} with TTL ${ttlSeconds}s`);
     } catch (error) {
       this.logger.error(
         `Failed to set cache entry ${key}: ${error.message}`,
@@ -227,7 +228,9 @@ export class RedisCacheBackend implements ICacheStorage {
         await this.client.del(...keys);
       }
 
-      this.logger.log(`Cleared ${keys.length} cache entries for job type: ${jobType}`);
+      this.logger.log(
+        `Cleared ${keys.length} cache entries for job type: ${jobType}`,
+      );
       return keys.length;
     } catch (error) {
       this.logger.error(
@@ -244,18 +247,18 @@ export class RedisCacheBackend implements ICacheStorage {
     avgEntrySize: number;
   }> {
     try {
-      const info = await this.client.info('memory');
-      const lines = info.split('\r\n');
+      const info = await this.client.info("memory");
+      const lines = info.split("\r\n");
       let usedMemory = 0;
 
       for (const line of lines) {
-        if (line.startsWith('used_memory:')) {
-          usedMemory = parseInt(line.split(':')[1], 10);
+        if (line.startsWith("used_memory:")) {
+          usedMemory = parseInt(line.split(":")[1], 10);
           break;
         }
       }
 
-      const keys = await this.client.keys('cache:*');
+      const keys = await this.client.keys("cache:*");
       const entryCount = keys.length;
       const avgEntrySize =
         entryCount > 0 ? Math.round(usedMemory / entryCount) : 0;
@@ -296,11 +299,9 @@ export class RedisCacheBackend implements ICacheStorage {
   async health(): Promise<boolean> {
     try {
       const result = await this.client.ping();
-      return result === 'PONG';
+      return result === "PONG";
     } catch (error) {
-      this.logger.error(
-        `Redis health check failed: ${error.message}`,
-      );
+      this.logger.error(`Redis health check failed: ${error.message}`);
       return false;
     }
   }
@@ -310,10 +311,7 @@ export class RedisCacheBackend implements ICacheStorage {
       const versionKey = `${key}:version`;
       await this.client.set(versionKey, JSON.stringify(version));
     } catch (error) {
-      this.logger.error(
-        `Failed to set version: ${error.message}`,
-        error.stack,
-      );
+      this.logger.error(`Failed to set version: ${error.message}`, error.stack);
       throw error;
     }
   }
@@ -325,10 +323,7 @@ export class RedisCacheBackend implements ICacheStorage {
       if (!value) return null;
       return JSON.parse(value);
     } catch (error) {
-      this.logger.error(
-        `Failed to get version: ${error.message}`,
-        error.stack,
-      );
+      this.logger.error(`Failed to get version: ${error.message}`, error.stack);
       return null;
     }
   }
@@ -373,7 +368,7 @@ export class RedisCacheBackend implements ICacheStorage {
   async disconnect(): Promise<void> {
     if (this.client) {
       await this.client.quit();
-      this.logger.log('Redis client disconnected');
+      this.logger.log("Redis client disconnected");
     }
   }
 }

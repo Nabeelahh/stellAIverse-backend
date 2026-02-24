@@ -1,8 +1,11 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { SimulationStateManager } from '../state/simulation-state.manager';
-import { StepResult, SimulationEvent } from '../interfaces/simulation.interface';
-import { EnvironmentConfigService } from '../config/environment-config.service';
-import { MockProviderFactory } from '../providers/mock-provider.factory';
+import { Injectable, Logger } from "@nestjs/common";
+import { SimulationStateManager } from "../state/simulation-state.manager";
+import {
+  StepResult,
+  SimulationEvent,
+} from "../interfaces/simulation.interface";
+import { EnvironmentConfigService } from "../config/environment-config.service";
+import { MockProviderFactory } from "../providers/mock-provider.factory";
 
 @Injectable()
 export class AgentExecutor {
@@ -36,7 +39,7 @@ export class AgentExecutor {
           step: simulation.currentStep,
           timestamp: Date.now(),
           agentId,
-          eventType: 'action',
+          eventType: "action",
           data: { action, outcome },
         });
 
@@ -50,7 +53,7 @@ export class AgentExecutor {
           step: simulation.currentStep,
           timestamp: Date.now(),
           agentId,
-          eventType: 'error',
+          eventType: "error",
           data: { error: error.message },
         });
       }
@@ -62,7 +65,7 @@ export class AgentExecutor {
 
     return {
       agentId: firstAgentId,
-      action: firstAgentState?.lastAction || 'idle',
+      action: firstAgentState?.lastAction || "idle",
       outcome: firstAgentState?.lastOutcome || {},
       terminated,
       events,
@@ -72,11 +75,18 @@ export class AgentExecutor {
   /**
    * Select action for agent (deterministic based on current state and seed)
    */
-  private async selectAction(agentId: string, agentState: any): Promise<string> {
+  private async selectAction(
+    agentId: string,
+    agentState: any,
+  ): Promise<string> {
     // Use deterministic random to select action
-    const actions = agentState.parameters?.availableActions || ['idle', 'move', 'interact'];
+    const actions = agentState.parameters?.availableActions || [
+      "idle",
+      "move",
+      "interact",
+    ];
     const selectedAction = this.envConfig.randomChoice(actions);
-    
+
     this.logger.debug(`Agent ${agentId} selected action: ${selectedAction}`);
     return selectedAction;
   }
@@ -84,20 +94,24 @@ export class AgentExecutor {
   /**
    * Execute action and return outcome (using mock providers)
    */
-  private async executeAction(agentId: string, action: string, agentState: any): Promise<any> {
+  private async executeAction(
+    agentId: string,
+    action: string,
+    agentState: any,
+  ): Promise<any> {
     const providers = this.mockProviderFactory.getProviders();
-    
+
     switch (action) {
-      case 'move':
+      case "move":
         return this.executeMoveAction(agentState);
-      
-      case 'interact':
+
+      case "interact":
         return this.executeInteractAction(agentId, agentState, providers);
-      
-      case 'query':
+
+      case "query":
         return this.executeQueryAction(agentState, providers);
-      
-      case 'idle':
+
+      case "idle":
       default:
         return { success: true, terminated: false };
     }
@@ -107,9 +121,9 @@ export class AgentExecutor {
    * Execute move action
    */
   private async executeMoveAction(agentState: any): Promise<any> {
-    const directions = ['north', 'south', 'east', 'west'];
+    const directions = ["north", "south", "east", "west"];
     const direction = this.envConfig.randomChoice(directions);
-    
+
     return {
       success: true,
       direction,
@@ -120,14 +134,18 @@ export class AgentExecutor {
   /**
    * Execute interact action (using mock providers)
    */
-  private async executeInteractAction(agentId: string, agentState: any, providers: any): Promise<any> {
+  private async executeInteractAction(
+    agentId: string,
+    agentState: any,
+    providers: any,
+  ): Promise<any> {
     // Use mock HTTP provider to simulate interaction
     if (providers.http) {
-      const response = await providers.http.get('/api/interact', {
+      const response = await providers.http.get("/api/interact", {
         agentId,
         state: agentState,
       });
-      
+
       return {
         success: response.success,
         data: response.data,
@@ -141,10 +159,15 @@ export class AgentExecutor {
   /**
    * Execute query action (using mock database)
    */
-  private async executeQueryAction(agentState: any, providers: any): Promise<any> {
+  private async executeQueryAction(
+    agentState: any,
+    providers: any,
+  ): Promise<any> {
     if (providers.database) {
-      const results = await providers.database.query('SELECT * FROM entities LIMIT 1');
-      
+      const results = await providers.database.query(
+        "SELECT * FROM entities LIMIT 1",
+      );
+
       return {
         success: true,
         results,

@@ -3,13 +3,13 @@ import {
   UnauthorizedException,
   BadRequestException,
   ConflictException,
-} from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { verifyMessage } from 'ethers';
-import { ChallengeService } from './challenge.service';
-import { User } from '../user/entities/user.entity';
+} from "@nestjs/common";
+import { JwtService } from "@nestjs/jwt";
+import { InjectRepository } from "@nestjs/typeorm";
+import { Repository } from "typeorm";
+import { verifyMessage } from "ethers";
+import { ChallengeService } from "./challenge.service";
+import { User } from "../user/entities/user.entity";
 
 export interface AuthPayload {
   address: string;
@@ -38,14 +38,14 @@ export class WalletAuthService {
     // Extract challenge ID from message
     const challengeId = this.challengeService.extractChallengeId(message);
     if (!challengeId) {
-      throw new UnauthorizedException('Invalid challenge message format');
+      throw new UnauthorizedException("Invalid challenge message format");
     }
 
     // Get and consume the challenge
     const challenge = this.challengeService.consumeChallenge(challengeId);
     if (!challenge) {
       throw new UnauthorizedException(
-        'Challenge not found or expired. Please request a new challenge.',
+        "Challenge not found or expired. Please request a new challenge.",
       );
     }
 
@@ -54,13 +54,13 @@ export class WalletAuthService {
     try {
       recoveredAddress = verifyMessage(message, signature);
     } catch (error) {
-      throw new UnauthorizedException('Invalid signature');
+      throw new UnauthorizedException("Invalid signature");
     }
 
     // Verify the recovered address matches the challenge address
     if (recoveredAddress.toLowerCase() !== challenge.address) {
       throw new UnauthorizedException(
-        'Signature does not match challenge address',
+        "Signature does not match challenge address",
       );
     }
 
@@ -73,7 +73,7 @@ export class WalletAuthService {
     const payload: AuthPayload = {
       address: recoveredAddress.toLowerCase(),
       email: user?.emailVerified ? user.email : undefined,
-      role: user?.role || 'user',
+      role: user?.role || "user",
       iat: Math.floor(Date.now() / 1000),
     };
 
@@ -92,7 +92,7 @@ export class WalletAuthService {
     try {
       return this.jwtService.verify(token);
     } catch (error) {
-      throw new UnauthorizedException('Invalid token');
+      throw new UnauthorizedException("Invalid token");
     }
   }
 
@@ -113,13 +113,13 @@ export class WalletAuthService {
     // Verify the signature for the new wallet
     const challengeId = this.challengeService.extractChallengeId(message);
     if (!challengeId) {
-      throw new UnauthorizedException('Invalid challenge message format');
+      throw new UnauthorizedException("Invalid challenge message format");
     }
 
     const challenge = this.challengeService.consumeChallenge(challengeId);
     if (!challenge) {
       throw new UnauthorizedException(
-        'Challenge not found or expired. Please request a new challenge.',
+        "Challenge not found or expired. Please request a new challenge.",
       );
     }
 
@@ -127,12 +127,12 @@ export class WalletAuthService {
     try {
       recoveredAddress = verifyMessage(message, signature);
     } catch (error) {
-      throw new UnauthorizedException('Invalid signature');
+      throw new UnauthorizedException("Invalid signature");
     }
 
     if (recoveredAddress.toLowerCase() !== normalizedNew) {
       throw new UnauthorizedException(
-        'Signature does not match the new wallet address',
+        "Signature does not match the new wallet address",
       );
     }
 
@@ -143,7 +143,7 @@ export class WalletAuthService {
 
     if (existingUser) {
       throw new ConflictException(
-        'This wallet address is already linked to another account',
+        "This wallet address is already linked to another account",
       );
     }
 
@@ -153,7 +153,7 @@ export class WalletAuthService {
     });
 
     if (!currentUser) {
-      throw new BadRequestException('Current user not found');
+      throw new BadRequestException("Current user not found");
     }
 
     // Update user's wallet address
@@ -161,7 +161,7 @@ export class WalletAuthService {
     await this.userRepository.save(currentUser);
 
     return {
-      message: 'Wallet successfully linked',
+      message: "Wallet successfully linked",
       walletAddress: normalizedNew,
     };
   }
@@ -180,7 +180,7 @@ export class WalletAuthService {
     // Verify addresses match
     if (normalizedCurrent !== normalizedUnlink) {
       throw new BadRequestException(
-        'You can only unlink your own wallet address',
+        "You can only unlink your own wallet address",
       );
     }
 
@@ -190,13 +190,13 @@ export class WalletAuthService {
     });
 
     if (!user) {
-      throw new BadRequestException('User not found');
+      throw new BadRequestException("User not found");
     }
 
     // Require email verification before unlinking
     if (!user.emailVerified || !user.email) {
       throw new BadRequestException(
-        'Email must be verified before unlinking wallet. This ensures account recovery.',
+        "Email must be verified before unlinking wallet. This ensures account recovery.",
       );
     }
 
@@ -204,7 +204,7 @@ export class WalletAuthService {
     // In a production system, you might want to implement a grace period
     return {
       message:
-        'Wallet unlink requested. Please use email recovery to regain access.',
+        "Wallet unlink requested. Please use email recovery to regain access.",
     };
   }
 
@@ -225,7 +225,7 @@ export class WalletAuthService {
 
     if (!user) {
       throw new BadRequestException(
-        'No verified account found with this email',
+        "No verified account found with this email",
       );
     }
 
@@ -236,7 +236,7 @@ export class WalletAuthService {
     );
 
     return {
-      message: 'Recovery initiated. Sign the challenge with your wallet.',
+      message: "Recovery initiated. Sign the challenge with your wallet.",
       walletAddress: user.walletAddress,
       challenge: challengeMessage,
     };

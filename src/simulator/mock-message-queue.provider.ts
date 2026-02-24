@@ -1,5 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
-import * as seedrandom from 'seedrandom';
+import { Injectable, Logger } from "@nestjs/common";
+import * as seedrandom from "seedrandom";
 
 interface QueuedMessage {
   id: string;
@@ -22,21 +22,21 @@ export class MockMessageQueueProvider {
    * Initialize the mock message queue provider
    */
   async initialize(seed: number, latency?: number): Promise<void> {
-    this.rng = seedrandom(seed.toString() + '-mq');
+    this.rng = seedrandom(seed.toString() + "-mq");
     this.queues.clear();
     this.messageLog = [];
     this.liveSubmissionCount = 0;
-    
+
     if (latency !== undefined) {
       this.simulatedLatency = latency;
     }
 
     // Initialize default queues
-    this.queues.set('default', []);
-    this.queues.set('tasks', []);
-    this.queues.set('events', []);
+    this.queues.set("default", []);
+    this.queues.set("tasks", []);
+    this.queues.set("events", []);
 
-    this.logger.log('Mock Message Queue provider initialized');
+    this.logger.log("Mock Message Queue provider initialized");
   }
 
   /**
@@ -47,7 +47,9 @@ export class MockMessageQueueProvider {
     if (this.isLiveQueue(queue)) {
       this.logger.warn(`Blocked live message queue submission to: ${queue}`);
       this.liveSubmissionCount++;
-      throw new Error('Live message queue submissions are blocked in simulation mode');
+      throw new Error(
+        "Live message queue submissions are blocked in simulation mode",
+      );
     }
 
     const message: QueuedMessage = {
@@ -78,10 +80,10 @@ export class MockMessageQueueProvider {
     await this.simulateLatency();
 
     const queueMessages = this.queues.get(queue) || [];
-    
+
     // Find first unprocessed message
-    const message = queueMessages.find(m => !m.processed);
-    
+    const message = queueMessages.find((m) => !m.processed);
+
     if (message) {
       message.processed = true;
       this.logger.debug(`Consumed message ${message.id} from queue ${queue}`);
@@ -96,7 +98,7 @@ export class MockMessageQueueProvider {
    */
   async peek(queue: string): Promise<QueuedMessage | null> {
     const queueMessages = this.queues.get(queue) || [];
-    const message = queueMessages.find(m => !m.processed);
+    const message = queueMessages.find((m) => !m.processed);
     return message || null;
   }
 
@@ -105,7 +107,7 @@ export class MockMessageQueueProvider {
    */
   async getQueueSize(queue: string): Promise<number> {
     const queueMessages = this.queues.get(queue) || [];
-    return queueMessages.filter(m => !m.processed).length;
+    return queueMessages.filter((m) => !m.processed).length;
   }
 
   /**
@@ -115,15 +117,17 @@ export class MockMessageQueueProvider {
     if (this.isLiveQueue(queue)) {
       this.logger.warn(`Blocked live queue purge: ${queue}`);
       this.liveSubmissionCount++;
-      throw new Error('Live queue operations are blocked in simulation mode');
+      throw new Error("Live queue operations are blocked in simulation mode");
     }
 
     const queueMessages = this.queues.get(queue) || [];
-    const unprocessedCount = queueMessages.filter(m => !m.processed).length;
-    
+    const unprocessedCount = queueMessages.filter((m) => !m.processed).length;
+
     this.queues.set(queue, []);
-    this.logger.debug(`Purged ${unprocessedCount} messages from queue ${queue}`);
-    
+    this.logger.debug(
+      `Purged ${unprocessedCount} messages from queue ${queue}`,
+    );
+
     return unprocessedCount;
   }
 
@@ -132,7 +136,7 @@ export class MockMessageQueueProvider {
    */
   async ack(messageId: string): Promise<boolean> {
     for (const [queue, messages] of this.queues) {
-      const message = messages.find(m => m.id === messageId);
+      const message = messages.find((m) => m.id === messageId);
       if (message) {
         message.processed = true;
         this.logger.debug(`Acknowledged message ${messageId}`);
@@ -147,7 +151,7 @@ export class MockMessageQueueProvider {
    */
   async requeue(messageId: string): Promise<boolean> {
     for (const [queue, messages] of this.queues) {
-      const message = messages.find(m => m.id === messageId);
+      const message = messages.find((m) => m.id === messageId);
       if (message) {
         message.processed = false;
         this.logger.debug(`Requeued message ${messageId}`);
@@ -168,13 +172,9 @@ export class MockMessageQueueProvider {
    * Check if queue is a live queue
    */
   private isLiveQueue(queue: string): boolean {
-    const livePatterns = [
-      /^production-/i,
-      /^live-/i,
-      /-prod$/i,
-    ];
+    const livePatterns = [/^production-/i, /^live-/i, /-prod$/i];
 
-    return livePatterns.some(pattern => pattern.test(queue));
+    return livePatterns.some((pattern) => pattern.test(queue));
   }
 
   /**
@@ -184,16 +184,16 @@ export class MockMessageQueueProvider {
     // Add some deterministic randomness to latency
     const jitter = Math.floor(this.rng() * 20) - 10; // -10 to +10 ms
     const delay = Math.max(0, this.simulatedLatency + jitter);
-    
-    await new Promise(resolve => setTimeout(resolve, delay));
+
+    await new Promise((resolve) => setTimeout(resolve, delay));
   }
 
   /**
    * Generate deterministic message ID
    */
   private generateMessageId(): string {
-    const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
-    let id = 'msg-';
+    const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
+    let id = "msg-";
     for (let i = 0; i < 12; i++) {
       id += chars[Math.floor(this.rng() * chars.length)];
     }
@@ -229,12 +229,12 @@ export class MockMessageQueueProvider {
     this.queues.clear();
     this.messageLog = [];
     this.liveSubmissionCount = 0;
-    
+
     // Reinitialize default queues
-    this.queues.set('default', []);
-    this.queues.set('tasks', []);
-    this.queues.set('events', []);
-    
-    this.logger.log('Mock Message Queue provider reset');
+    this.queues.set("default", []);
+    this.queues.set("tasks", []);
+    this.queues.set("events", []);
+
+    this.logger.log("Mock Message Queue provider reset");
   }
 }

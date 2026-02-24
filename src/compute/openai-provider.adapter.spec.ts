@@ -1,7 +1,12 @@
 import { Test, TestingModule } from "@nestjs/testing";
 import { ConfigService } from "@nestjs/config";
 import { OpenAIProviderAdapter } from "./openai-provider.adapter";
-import { NormalizedPrompt, Tool, FunctionDefinition, FunctionCall } from "./dto/provider.dto";
+import {
+  NormalizedPrompt,
+  Tool,
+  FunctionDefinition,
+  FunctionCall,
+} from "./dto/provider.dto";
 import axios from "axios";
 
 jest.mock("axios");
@@ -26,7 +31,11 @@ describe("OpenAIProviderAdapter", () => {
   };
 
   // Helper to create mock OpenAI responses
-  const createMockOpenAIResponse = (content: string = "Test response", functionCall?: any, toolCalls?: any) => ({
+  const createMockOpenAIResponse = (
+    content: string = "Test response",
+    functionCall?: any,
+    toolCalls?: any,
+  ) => ({
     id: "chatcmpl-123",
     object: "chat.completion" as const,
     created: 1677652288,
@@ -40,7 +49,11 @@ describe("OpenAIProviderAdapter", () => {
           ...(functionCall && { function_call: functionCall }),
           ...(toolCalls && { tool_calls: toolCalls }),
         },
-        finish_reason: functionCall ? "function_call" : toolCalls ? "tool_calls" : "stop" as const,
+        finish_reason: functionCall
+          ? "function_call"
+          : toolCalls
+            ? "tool_calls"
+            : ("stop" as const),
       },
     ],
     usage: {
@@ -51,29 +64,34 @@ describe("OpenAIProviderAdapter", () => {
   });
 
   // Helper to create mock function definition
-  const createMockFunctionDefinition = (name: string = "test_function"): FunctionDefinition => ({
+  const createMockFunctionDefinition = (
+    name: string = "test_function",
+  ): FunctionDefinition => ({
     name,
     description: "A test function",
     parameters: {
       type: "object",
       properties: {
         param1: { type: "string" },
-        param2: { type: "number" }
+        param2: { type: "number" },
       },
-      required: ["param1"]
-    }
+      required: ["param1"],
+    },
   });
 
   // Helper to create mock tool
   const createMockTool = (name: string = "test_function"): Tool => ({
     type: "function",
-    function: createMockFunctionDefinition(name)
+    function: createMockFunctionDefinition(name),
   });
 
   // Helper to create mock function call
-  const createMockFunctionCall = (name: string = "test_function", args: string = '{"param1": "value"}'): FunctionCall => ({
+  const createMockFunctionCall = (
+    name: string = "test_function",
+    args: string = '{"param1": "value"}',
+  ): FunctionCall => ({
     name,
-    arguments: args
+    arguments: args,
   });
 
   beforeEach(async () => {
@@ -428,7 +446,7 @@ describe("OpenAIProviderAdapter", () => {
       const prompt: NormalizedPrompt = {
         messages: [{ role: "user", content: "What's the weather?" }],
         functions,
-        functionCall: { name: "get_weather" }
+        functionCall: { name: "get_weather" },
       };
 
       const normalized = adapter.normalizePrompt(prompt);
@@ -442,17 +460,23 @@ describe("OpenAIProviderAdapter", () => {
       const prompt: NormalizedPrompt = {
         messages: [{ role: "user", content: "What's the weather?" }],
         tools,
-        toolChoice: { type: "function", function: { name: "get_weather" } }
+        toolChoice: { type: "function", function: { name: "get_weather" } },
       };
 
       const normalized = adapter.normalizePrompt(prompt);
 
       expect(normalized.tools).toEqual(tools);
-      expect(normalized.tool_choice).toEqual({ type: "function", function: { name: "get_weather" } });
+      expect(normalized.tool_choice).toEqual({
+        type: "function",
+        function: { name: "get_weather" },
+      });
     });
 
     it("should normalize response with function call", () => {
-      const functionCall = createMockFunctionCall("get_weather", '{"city": "NYC"}');
+      const functionCall = createMockFunctionCall(
+        "get_weather",
+        '{"city": "NYC"}',
+      );
       const openAIResponse = createMockOpenAIResponse("", functionCall);
 
       const normalized = adapter.normalizeResponse(openAIResponse);
@@ -462,11 +486,13 @@ describe("OpenAIProviderAdapter", () => {
     });
 
     it("should normalize response with tool calls", () => {
-      const toolCalls = [{
-        id: "call_123",
-        type: "function" as const,
-        function: createMockFunctionCall("get_weather", '{"city": "NYC"}')
-      }];
+      const toolCalls = [
+        {
+          id: "call_123",
+          type: "function" as const,
+          function: createMockFunctionCall("get_weather", '{"city": "NYC"}'),
+        },
+      ];
       const openAIResponse = createMockOpenAIResponse("", undefined, toolCalls);
 
       const normalized = adapter.normalizeResponse(openAIResponse);
@@ -478,8 +504,12 @@ describe("OpenAIProviderAdapter", () => {
       const prompt: NormalizedPrompt = {
         messages: [
           { role: "user", content: "What's the weather?" },
-          { role: "tool", content: '{"temperature": "72°F"}', toolCallId: "call_123" }
-        ]
+          {
+            role: "tool",
+            content: '{"temperature": "72°F"}',
+            toolCallId: "call_123",
+          },
+        ],
       };
 
       const normalized = adapter.normalizePrompt(prompt);
@@ -489,7 +519,10 @@ describe("OpenAIProviderAdapter", () => {
     });
 
     it("should execute function call request successfully", async () => {
-      const functionCall = createMockFunctionCall("get_weather", '{"city": "NYC"}');
+      const functionCall = createMockFunctionCall(
+        "get_weather",
+        '{"city": "NYC"}',
+      );
       const mockResponse = {
         data: createMockOpenAIResponse("", functionCall),
       };
@@ -502,7 +535,7 @@ describe("OpenAIProviderAdapter", () => {
 
       const prompt: NormalizedPrompt = {
         messages: [{ role: "user", content: "What's the weather in NYC?" }],
-        functions: [createMockFunctionDefinition("get_weather")]
+        functions: [createMockFunctionDefinition("get_weather")],
       };
 
       const result = await adapter.execute(prompt);
@@ -516,7 +549,7 @@ describe("OpenAIProviderAdapter", () => {
     it("should handle prompts without function calling", () => {
       const prompt: NormalizedPrompt = {
         messages: [{ role: "user", content: "Hello" }],
-        temperature: 0.7
+        temperature: 0.7,
       };
 
       const normalized = adapter.normalizePrompt(prompt);

@@ -1,19 +1,23 @@
-import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import { IAIProvider, AIProviderType, IProviderConfig } from './provider.interface';
+import { Injectable, Logger, OnModuleInit } from "@nestjs/common";
+import {
+  IAIProvider,
+  AIProviderType,
+  IProviderConfig,
+} from "./provider.interface";
 import {
   CompletionRequestDto,
   CompletionResponseDto,
   EmbeddingRequestDto,
   EmbeddingResponseDto,
-} from './base.dto';
+} from "./base.dto";
 
 /**
  * ComputeBridge Service
- * 
+ *
  * Core service for orchestrating AI provider calls.
  * Manages provider instances, routes requests to appropriate providers,
  * and normalizes responses across different AI services.
- * 
+ *
  * @class ComputeBridgeService
  */
 @Injectable()
@@ -25,14 +29,14 @@ export class ComputeBridgeService implements OnModuleInit {
    * Initialize the service on module initialization
    */
   async onModuleInit() {
-    this.logger.log('ComputeBridge service initializing...');
+    this.logger.log("ComputeBridge service initializing...");
     // Provider initialization will happen here
-    this.logger.log('ComputeBridge service initialized');
+    this.logger.log("ComputeBridge service initialized");
   }
 
   /**
    * Register a new AI provider
-   * 
+   *
    * @param provider Provider instance implementing IAIProvider
    * @param config Provider configuration
    */
@@ -54,7 +58,7 @@ export class ComputeBridgeService implements OnModuleInit {
 
   /**
    * Get a registered provider by type
-   * 
+   *
    * @param type Provider type
    * @returns Provider instance or undefined
    */
@@ -64,7 +68,7 @@ export class ComputeBridgeService implements OnModuleInit {
 
   /**
    * Check if a provider is registered
-   * 
+   *
    * @param type Provider type
    * @returns True if provider is registered
    */
@@ -74,7 +78,7 @@ export class ComputeBridgeService implements OnModuleInit {
 
   /**
    * List all registered providers
-   * 
+   *
    * @returns Array of registered provider types
    */
   listProviders(): AIProviderType[] {
@@ -83,10 +87,10 @@ export class ComputeBridgeService implements OnModuleInit {
 
   /**
    * Generate a completion using specified provider
-   * 
+   *
    * This method will be implemented to route requests to the appropriate
    * provider and normalize the response format.
-   * 
+   *
    * @param request Completion request
    * @returns Completion response
    * @throws Error if provider is not registered or request fails
@@ -110,15 +114,15 @@ export class ComputeBridgeService implements OnModuleInit {
 
     // Provider-specific implementation will be added here
     // For now, this is a placeholder
-    throw new Error('Completion method not yet implemented');
+    throw new Error("Completion method not yet implemented");
   }
 
   /**
    * Generate embeddings using specified provider
-   * 
+   *
    * This method will be implemented to route requests to the appropriate
    * provider and normalize the response format.
-   * 
+   *
    * @param request Embedding request
    * @returns Embedding response
    * @throws Error if provider is not registered or request fails
@@ -142,12 +146,12 @@ export class ComputeBridgeService implements OnModuleInit {
 
     // Provider-specific implementation will be added here
     // For now, this is a placeholder
-    throw new Error('Embedding method not yet implemented');
+    throw new Error("Embedding method not yet implemented");
   }
 
   /**
    * Validate a model is available for a specific provider
-   * 
+   *
    * @param provider Provider type
    * @param modelId Model identifier
    * @returns True if model is valid and available
@@ -174,7 +178,7 @@ export class ComputeBridgeService implements OnModuleInit {
 
   /**
    * Get available models for a specific provider
-   * 
+   *
    * @param provider Provider type
    * @returns Array of available models
    */

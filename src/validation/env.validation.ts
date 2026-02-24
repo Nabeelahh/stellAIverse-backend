@@ -10,22 +10,22 @@ import {
   MinLength,
   IsEmail,
   ValidateIf,
-} from 'class-validator';
-import { Transform, Type } from 'class-transformer';
+} from "class-validator";
+import { Transform, Type } from "class-transformer";
 
 export enum Environment {
-  Development = 'development',
-  Production = 'production',
-  Staging = 'staging',
-  Test = 'test',
+  Development = "development",
+  Production = "production",
+  Staging = "staging",
+  Test = "test",
 }
 
 export enum LogLevel {
-  Error = 'error',
-  Warn = 'warn',
-  Info = 'info',
-  Debug = 'debug',
-  Verbose = 'verbose',
+  Error = "error",
+  Warn = "warn",
+  Info = "info",
+  Debug = "debug",
+  Verbose = "verbose",
 }
 
 /**
@@ -58,11 +58,11 @@ export class EnvironmentVariables {
 
   @IsString()
   @IsOptional()
-  API_PREFIX?: string = 'api';
+  API_PREFIX?: string = "api";
 
   @IsString()
   @IsOptional()
-  API_VERSION?: string = 'v1';
+  API_VERSION?: string = "v1";
 
   // ==========================================
   // DATABASE
@@ -86,17 +86,17 @@ export class EnvironmentVariables {
   @IsString()
   DB_NAME: string;
 
-  @Transform(({ value }) => value === 'true' || value === true)
+  @Transform(({ value }) => value === "true" || value === true)
   @IsBoolean()
   @IsOptional()
   DB_SYNCHRONIZE?: boolean = false;
 
-  @Transform(({ value }) => value === 'true' || value === true)
+  @Transform(({ value }) => value === "true" || value === true)
   @IsBoolean()
   @IsOptional()
   DB_LOGGING?: boolean = false;
 
-  @Transform(({ value }) => value === 'true' || value === true)
+  @Transform(({ value }) => value === "true" || value === true)
   @IsBoolean()
   @IsOptional()
   DB_SSL?: boolean = false;
@@ -119,7 +119,7 @@ export class EnvironmentVariables {
 
   @IsString()
   @IsOptional()
-  REDIS_HOST?: string = 'localhost';
+  REDIS_HOST?: string = "localhost";
 
   @Type(() => Number)
   @IsNumber()
@@ -130,7 +130,7 @@ export class EnvironmentVariables {
 
   @IsString()
   @IsOptional()
-  REDIS_PASSWORD?: string = '';
+  REDIS_PASSWORD?: string = "";
 
   @Type(() => Number)
   @IsNumber()
@@ -154,7 +154,7 @@ export class EnvironmentVariables {
 
   @IsString()
   @IsOptional()
-  JWT_EXPIRES_IN?: string = '1h';
+  JWT_EXPIRES_IN?: string = "1h";
 
   @IsString()
   @MinLength(32)
@@ -162,21 +162,21 @@ export class EnvironmentVariables {
 
   @IsString()
   @IsOptional()
-  JWT_REFRESH_EXPIRES_IN?: string = '7d';
+  JWT_REFRESH_EXPIRES_IN?: string = "7d";
 
   @IsString()
   @MinLength(32)
   @ValidateIf((o) => o.NODE_ENV === Environment.Production)
   ENCRYPTION_KEY: string;
 
-  @Transform(({ value }) => value === 'true' || value === true)
+  @Transform(({ value }) => value === "true" || value === true)
   @IsBoolean()
   @IsOptional()
   CORS_ENABLED?: boolean = true;
 
   @IsString()
   @IsOptional()
-  CORS_ORIGIN?: string = 'http://localhost:3000';
+  CORS_ORIGIN?: string = "http://localhost:3000";
 
   @Type(() => Number)
   @IsNumber()
@@ -225,7 +225,7 @@ export class EnvironmentVariables {
   @IsOptional()
   SMTP_PORT?: number;
 
-  @Transform(({ value }) => value === 'true' || value === true)
+  @Transform(({ value }) => value === "true" || value === true)
   @IsBoolean()
   @IsOptional()
   SMTP_SECURE?: boolean = false;
@@ -254,14 +254,14 @@ export class EnvironmentVariables {
   @IsOptional()
   LOG_LEVEL?: LogLevel = LogLevel.Info;
 
-  @Transform(({ value }) => value === 'true' || value === true)
+  @Transform(({ value }) => value === "true" || value === true)
   @IsBoolean()
   @IsOptional()
   LOG_FILE_ENABLED?: boolean = false;
 
   @IsString()
   @IsOptional()
-  LOG_FILE_PATH?: string = './logs';
+  LOG_FILE_PATH?: string = "./logs";
 
   @IsString()
   @IsOptional()
@@ -299,17 +299,17 @@ export class EnvironmentVariables {
   // FEATURE FLAGS
   // ==========================================
 
-  @Transform(({ value }) => value === 'true' || value === true)
+  @Transform(({ value }) => value === "true" || value === true)
   @IsBoolean()
   @IsOptional()
   FEATURE_REGISTRATION_ENABLED?: boolean = true;
 
-  @Transform(({ value }) => value === 'true' || value === true)
+  @Transform(({ value }) => value === "true" || value === true)
   @IsBoolean()
   @IsOptional()
   FEATURE_EMAIL_VERIFICATION?: boolean = true;
 
-  @Transform(({ value }) => value === 'true' || value === true)
+  @Transform(({ value }) => value === "true" || value === true)
   @IsBoolean()
   @IsOptional()
   FEATURE_SWAGGER_ENABLED?: boolean = true;
@@ -326,7 +326,7 @@ export class EnvironmentVariables {
 
   @IsString()
   @IsOptional()
-  ALLOWED_FILE_TYPES?: string = 'image/jpeg,image/png,application/pdf';
+  ALLOWED_FILE_TYPES?: string = "image/jpeg,image/png,application/pdf";
 
   @Type(() => Number)
   @IsNumber()
@@ -342,5 +342,5 @@ export class EnvironmentVariables {
 
   @IsString()
   @IsOptional()
-  TZ?: string = 'UTC';
+  TZ?: string = "UTC";
 }

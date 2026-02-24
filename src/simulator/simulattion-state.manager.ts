@@ -1,6 +1,11 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { SimulationConfig, SimulationState, SimulationEvent, StepResult } from '../interfaces/simulation.interface';
-import { v4 as uuidv4 } from 'uuid';
+import { Injectable, Logger } from "@nestjs/common";
+import {
+  SimulationConfig,
+  SimulationState,
+  SimulationEvent,
+  StepResult,
+} from "../interfaces/simulation.interface";
+import { v4 as uuidv4 } from "uuid";
 
 @Injectable()
 export class SimulationStateManager {
@@ -12,7 +17,7 @@ export class SimulationStateManager {
    */
   async createSimulation(config: SimulationConfig): Promise<string> {
     const id = uuidv4();
-    
+
     const state: SimulationState = {
       id,
       config,
@@ -24,7 +29,7 @@ export class SimulationStateManager {
     };
 
     // Initialize agent states
-    config.agents.forEach(agentConfig => {
+    config.agents.forEach((agentConfig) => {
       state.agentStates.set(agentConfig.id, {
         ...agentConfig.initialState,
         type: agentConfig.type,
@@ -33,8 +38,10 @@ export class SimulationStateManager {
     });
 
     this.simulations.set(id, state);
-    this.logger.log(`Created simulation ${id} with ${config.agents.length} agents`);
-    
+    this.logger.log(
+      `Created simulation ${id} with ${config.agents.length} agents`,
+    );
+
     return id;
   }
 
@@ -48,14 +55,17 @@ export class SimulationStateManager {
   /**
    * Record a simulation step
    */
-  async recordStep(simulationId: string, stepResult: StepResult): Promise<void> {
+  async recordStep(
+    simulationId: string,
+    stepResult: StepResult,
+  ): Promise<void> {
     const simulation = this.simulations.get(simulationId);
     if (!simulation) {
       throw new Error(`Simulation ${simulationId} not found`);
     }
 
     simulation.currentStep++;
-    
+
     // Update agent state
     if (stepResult.agentId) {
       const currentAgentState = simulation.agentStates.get(stepResult.agentId);
@@ -67,14 +77,16 @@ export class SimulationStateManager {
     }
 
     // Add events to log
-    stepResult.events.forEach(event => {
+    stepResult.events.forEach((event) => {
       simulation.eventLog.push({
         ...event,
         step: simulation.currentStep,
       });
     });
 
-    this.logger.debug(`Recorded step ${simulation.currentStep} for simulation ${simulationId}`);
+    this.logger.debug(
+      `Recorded step ${simulation.currentStep} for simulation ${simulationId}`,
+    );
   }
 
   /**
@@ -92,7 +104,7 @@ export class SimulationStateManager {
     simulation.eventLog = [];
 
     // Reset agent states to initial
-    simulation.config.agents.forEach(agentConfig => {
+    simulation.config.agents.forEach((agentConfig) => {
       simulation.agentStates.set(agentConfig.id, {
         ...agentConfig.initialState,
         type: agentConfig.type,

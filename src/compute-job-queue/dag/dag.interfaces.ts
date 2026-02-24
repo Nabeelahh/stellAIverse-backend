@@ -8,31 +8,31 @@
 
 /** Condition under which a dependent job should execute. */
 export enum DependencyCondition {
-  ON_SUCCESS = 'onSuccess',
-  ON_FAILURE = 'onFailure',
-  ON_PARTIAL_SUCCESS = 'onPartialSuccess',
-  ALWAYS = 'always',
+  ON_SUCCESS = "onSuccess",
+  ON_FAILURE = "onFailure",
+  ON_PARTIAL_SUCCESS = "onPartialSuccess",
+  ALWAYS = "always",
 }
 
 /** Lifecycle status of an individual DAG node (job). */
 export enum DagNodeStatus {
-  PENDING = 'pending',
-  QUEUED = 'queued',
-  RUNNING = 'running',
-  COMPLETED = 'completed',
-  FAILED = 'failed',
-  SKIPPED = 'skipped',
-  CANCELLED = 'cancelled',
+  PENDING = "pending",
+  QUEUED = "queued",
+  RUNNING = "running",
+  COMPLETED = "completed",
+  FAILED = "failed",
+  SKIPPED = "skipped",
+  CANCELLED = "cancelled",
 }
 
 /** Lifecycle status of the overall DAG workflow. */
 export enum DagWorkflowStatus {
-  PENDING = 'pending',
-  RUNNING = 'running',
-  COMPLETED = 'completed',
-  FAILED = 'failed',
-  PARTIALLY_COMPLETED = 'partially_completed',
-  CANCELLED = 'cancelled',
+  PENDING = "pending",
+  RUNNING = "running",
+  COMPLETED = "completed",
+  FAILED = "failed",
+  PARTIALLY_COMPLETED = "partially_completed",
+  CANCELLED = "cancelled",
 }
 
 /** A single dependency edge: "this node depends on `jobId` under `condition`." */
