@@ -1,7 +1,28 @@
+// Add minimal AgentResponseDto and SearchAgentsResponseDto for build
+import { Agent } from './agent.entity';
+
+export class AgentResponseDto {
+  constructor(agent: Agent) {
+    Object.assign(this, agent);
+  }
+}
+
+export class SearchAgentsResponseDto {
+  data: AgentResponseDto[];
+  total: number;
+  page: number;
+  limit: number;
+  constructor(agents: Agent[], total: number, page: number, limit: number) {
+    this.data = agents.map(a => new AgentResponseDto(a));
+    this.total = total;
+    this.page = page;
+    this.limit = limit;
+  }
+}
 import { IsOptional, IsArray, IsEnum, IsInt, Min, Max, IsString, MinLength } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { AgentCapability, AgentStatus } from '../entities/agent.entity';
+import { AgentCapability, AgentStatus } from './agent.entity';
 
 export enum SortBy {
   POPULARITY = 'popularity',

@@ -4,7 +4,7 @@ import {
   IProviderConfig,
   IModelInfo,
   AIProviderType,
-} from '../interfaces/provider.interface';
+} from './provider.interface';
 
 /**
  * Base AI Provider

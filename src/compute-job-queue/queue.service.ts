@@ -4,6 +4,8 @@ import { Queue, Job, JobOptions } from 'bull';
 import { RetryPolicyService } from './retry-policy.service';
 import { BatchStrategy } from './dto/batch-job.dto';
 
+import { CacheConfigDto } from '../cache/dto/cache-config.dto';
+
 export interface ComputeJobData {
   type: string;
   payload: any;
@@ -11,6 +13,8 @@ export interface ComputeJobData {
   priority?: number;
   groupKey?: string;
   metadata?: Record<string, any>;
+  cacheConfig?: CacheConfigDto;
+  providerId?: string;
 }
 
 export interface JobResult {

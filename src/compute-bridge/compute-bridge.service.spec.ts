@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ComputeBridgeService } from './compute-bridge.service';
-import { AIProviderType, IAIProvider, IProviderConfig } from './interfaces/provider.interface';
+import { AIProviderType, IAIProvider, IProviderConfig } from './provider.interface';
 
 describe('ComputeBridgeService', () => {
   let service: ComputeBridgeService;
