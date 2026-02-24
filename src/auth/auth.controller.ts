@@ -15,6 +15,9 @@ import { JwtAuthGuard } from "./jwt.guard";
 import { LinkEmailDto } from "./dto/link-email.dto";
 import { VerifyEmailDto } from "./dto/verify-email.dto";
 import { RequestRecoveryDto } from "./dto/request-recovery.dto";
+import { LinkWalletDto } from "./dto/link-wallet.dto";
+import { UnlinkWalletDto } from "./dto/unlink-wallet.dto";
+import { RecoverWalletDto } from "./dto/recover-wallet.dto";
 import { Throttle } from "@nestjs/throttler";
 import { Roles, Role } from "../common/decorators/roles.decorator";
 import { RolesGuard } from "../common/guard/roles.guard";
@@ -100,6 +103,41 @@ export class AuthController {
   @Post("recovery/verify")
   async verifyRecovery(@Body() dto: RequestRecoveryDto) {
     return this.recoveryService.verifyRecoveryAndGetChallenge(dto.email);
+  }
+
+  // Wallet Management Endpoints
+
+  @Throttle({ default: { ttl: 60000, limit: 5 } })
+  @UseGuards(JwtAuthGuard)
+  @Post("link-wallet")
+  async linkWallet(@Request() req, @Body() dto: LinkWalletDto) {
+    const currentWalletAddress = req.user.address;
+    return this.walletAuthService.linkWallet(
+      currentWalletAddress,
+      dto.walletAddress,
+      dto.message,
+      dto.signature,
+    );
+  }
+
+  @Throttle({ default: { ttl: 60000, limit: 5 } })
+  @UseGuards(JwtAuthGuard)
+  @Post("unlink-wallet")
+  async unlinkWallet(@Request() req, @Body() dto: UnlinkWalletDto) {
+    const currentWalletAddress = req.user.address;
+    return this.walletAuthService.unlinkWallet(
+      currentWalletAddress,
+      dto.walletAddress,
+    );
+  }
+
+  @Throttle({ default: { ttl: 60000, limit: 3 } })
+  @Post("recover-wallet")
+  async recoverWallet(@Body() dto: RecoverWalletDto) {
+    return this.walletAuthService.recoverWallet(
+      dto.email,
+      dto.recoveryToken,
+    );
   }
 
   // Admin Endpoints (RBAC protected)
