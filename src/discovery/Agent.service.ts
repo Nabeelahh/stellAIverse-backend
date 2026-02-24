@@ -1,9 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, SelectQueryBuilder } from 'typeorm';
-import { Agent, AgentStatus } from './entities/agent.entity';
-import { SearchAgentsDto, SortBy } from './dto/search-agents.dto';
-import { SearchAgentsResponseDto } from './dto/agent-response.dto';
+import { Agent, AgentStatus } from './agent.entity';
+import { SearchAgentsDto, SortBy } from './search-agent.dto';
+import { SearchAgentsResponseDto } from './agent-response.dto';
 
 @Injectable()
 export class AgentsService {

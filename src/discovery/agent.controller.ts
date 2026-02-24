@@ -14,9 +14,9 @@ import {
   ApiResponse,
   ApiParam,
 } from '@nestjs/swagger';
-import { AgentsService } from './agents.service';
-import { SearchAgentsDto } from './dto/search-agents.dto';
-import { SearchAgentsResponseDto, AgentResponseDto } from './dto/agent-response.dto';
+import { AgentsService } from './Agent.service';
+import { SearchAgentsDto } from './search-agent.dto';
+import { SearchAgentsResponseDto, AgentResponseDto } from './agent-response.dto';
 
 @ApiTags('agents')
 @Controller('agents')

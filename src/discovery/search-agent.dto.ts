@@ -1,7 +1,7 @@
 import { IsOptional, IsArray, IsEnum, IsInt, Min, Max, IsString, MinLength } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { AgentCapability, AgentStatus } from '../entities/agent.entity';
+import { AgentCapability, AgentStatus } from './agent.entity';
 
 export enum SortBy {
   POPULARITY = 'popularity',

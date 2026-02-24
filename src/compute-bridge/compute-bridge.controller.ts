@@ -21,8 +21,8 @@ import {
   EmbeddingRequestDto,
   EmbeddingResponseDto,
   ErrorResponseDto,
-} from './dto/base.dto';
-import { AIProviderType } from './interfaces/provider.interface';
+} from './base.dto';
+import { AIProviderType } from './provider.interface';
 
 /**
  * ComputeBridge Controller

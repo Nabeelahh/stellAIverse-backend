@@ -1,11 +1,11 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import { IAIProvider, AIProviderType, IProviderConfig } from './interfaces/provider.interface';
+import { IAIProvider, AIProviderType, IProviderConfig } from './provider.interface';
 import {
   CompletionRequestDto,
   CompletionResponseDto,
   EmbeddingRequestDto,
   EmbeddingResponseDto,
-} from './dto/base.dto';
+} from './base.dto';
 
 /**
  * ComputeBridge Service

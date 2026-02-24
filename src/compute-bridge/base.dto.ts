@@ -1,7 +1,7 @@
 import { IsString, IsOptional, IsNumber, IsBoolean, IsEnum, IsArray, Min, Max, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { AIProviderType } from '../interfaces/provider.interface';
+import { AIProviderType } from './provider.interface';
 
 /**
  * Base Request DTO
