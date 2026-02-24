@@ -70,6 +70,16 @@ export class ComputeJobProcessor {
         result,
       });
 
+      // Notify DAG orchestrator if this job belongs to a workflow
+      const dagCtx = job.data.metadata?.dagContext;
+      if (dagCtx?.workflowId && dagCtx?.nodeId) {
+        this.eventEmitter?.emit('dag.job.completed', {
+          workflowId: dagCtx.workflowId,
+          nodeId: dagCtx.nodeId,
+          result,
+        });
+      }
+
       return {
         success: true,
         data: result,
@@ -100,7 +110,17 @@ export class ComputeJobProcessor {
           jobType: job.data.type,
           error: error.message,
         });
-        
+
+        // Notify DAG orchestrator if this job belongs to a workflow
+        const dagCtx = job.data.metadata?.dagContext;
+        if (dagCtx?.workflowId && dagCtx?.nodeId) {
+          this.eventEmitter?.emit('dag.job.failed', {
+            workflowId: dagCtx.workflowId,
+            nodeId: dagCtx.nodeId,
+            error: error.message,
+          });
+        }
+
         return {
           success: false,
           error: error.message,

@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { BullModule } from '@nestjs/bull';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { EventEmitterModule } from '@nestjs/event-emitter';
@@ -7,6 +7,7 @@ import { ComputeJobProcessor } from './compute-job.processor';
 import { QueueHealthIndicator } from './compute-job-healt.indicators';
 import { CacheModule } from '../cache/cache.module';
 import { RetryPolicyService } from './retry-policy.service';
+import { DagModule } from './dag/dag.module';
 
 @Module({
   imports: [
@@ -58,6 +59,7 @@ import { RetryPolicyService } from './retry-policy.service';
     ),
     CacheModule,
     EventEmitterModule.forRoot(),
+    forwardRef(() => DagModule),
   ],
   providers: [
     QueueService,
@@ -65,6 +67,6 @@ import { RetryPolicyService } from './retry-policy.service';
     QueueHealthIndicator,
     RetryPolicyService,
   ],
-  exports: [QueueService, BullModule, CacheModule],
+  exports: [QueueService, BullModule, CacheModule, DagModule],
 })
 export class QueueModule {}
