@@ -7,11 +7,13 @@ import {
   UseGuards,
   Request,
 } from "@nestjs/common";
+import { AuthService } from "./auth.service";
 import { ChallengeService } from "./challenge.service";
 import { WalletAuthService } from "./wallet-auth.service";
 import { EmailLinkingService } from "./email-linking.service";
 import { RecoveryService } from "./recovery.service";
 import { JwtAuthGuard } from "./jwt.guard";
+import { RegisterDto, LoginDto } from "./dto/auth.dto";
 import { LinkEmailDto } from "./dto/link-email.dto";
 import { VerifyEmailDto } from "./dto/verify-email.dto";
 import { RequestRecoveryDto } from "./dto/request-recovery.dto";
@@ -35,20 +37,41 @@ export class VerifySignatureDto {
 @Controller("auth")
 export class AuthController {
   constructor(
+    private readonly authService: AuthService,
     private readonly challengeService: ChallengeService,
     private readonly walletAuthService: WalletAuthService,
     private readonly emailLinkingService: EmailLinkingService,
     private readonly recoveryService: RecoveryService,
   ) {}
 
-  @Post("challenge")
-  requestChallenge(@Body() dto: RequestChallengeDto) {
-    const message = this.challengeService.issueChallengeForAddress(dto.address);
-    return {
-      message,
-      address: dto.address,
-    };
+  // Traditional Authentication Endpoints
+
+  @Post("register")
+  async register(@Body() registerDto: RegisterDto) {
+    return this.authService.register(registerDto);
   }
+
+  @Post("login")
+  async login(@Body() loginDto: LoginDto) {
+    return this.authService.login(loginDto);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post("logout")
+  async logout() {
+    // For JWT, logout is handled client-side by removing the token
+    // In a production app, you might want to implement token blacklisting
+    return { message: "Logged out successfully" };
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get("status")
+  async getAuthStatus(@Request() req) {
+    const user = req.user;
+    return this.authService.getAuthStatus(user);
+  }
+
+  // Wallet Authentication Endpoints
 
   @Post("verify")
   async verifySignature(@Body() dto: VerifySignatureDto) {

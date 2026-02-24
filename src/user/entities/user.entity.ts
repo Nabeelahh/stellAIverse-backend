@@ -18,6 +18,10 @@ export class User {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
+  @Column({ unique: true, nullable: true })
+  @Index()
+  username: string | null;
+
   @Column({ unique: true, nullable: false })
   @Index()
   walletAddress: string;
@@ -25,6 +29,9 @@ export class User {
   @Column({ unique: true, nullable: true })
   @Index()
   email: string | null;
+
+  @Column({ nullable: true })
+  password: string | null;
 
   @Column({ default: false })
   emailVerified: boolean;
