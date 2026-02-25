@@ -7,6 +7,7 @@ import {
   Max,
   IsEnum,
   ValidateNested,
+  IsArray,
 } from "class-validator";
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 import { Type } from "class-transformer";
@@ -88,6 +89,23 @@ export class CreateJobDto {
   @IsOptional()
   @IsString()
   providerId?: string;
+
+  @ApiPropertyOptional({
+    description: 'Parent job IDs this job depends on',
+    example: ['job-123', 'job-456'],
+  })
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  parentJobIds?: string[];
+
+  @ApiPropertyOptional({
+    description: 'Provider model for provenance tracking',
+    example: 'gpt-4-turbo',
+  })
+  @IsOptional()
+  @IsString()
+  providerModel?: string;
 }
 
 export class CreateDelayedJobDto extends CreateJobDto {

@@ -15,7 +15,7 @@ Core responsibilities
   WebSocket gateways and event streams for live agent status, progress updates, heartbeats, and telemetry used by dashboards and operator UIs.
 
 - User authentication  
-  Wallet signature authentication as the primary flow, with optional email linking and recovery. Implemented with Nest guards and strategies.
+  Wallet signature authentication as the primary flow, with optional email linking and recovery. Traditional email/password authentication with secure bcrypt hashing. Implemented with Nest guards and strategies.
 
 - Agent discovery & recommendation engine  
   Index agent metadata, capabilities, provenance, and historical performance. Provide discovery endpoints and personalized recommendation/ranking APIs.
@@ -104,6 +104,25 @@ See [SECURITY.md](SECURITY.md) for vulnerability reporting details.
 ### Security Documentation
 - 🔐 [SECURITY.md](SECURITY.md) - Vulnerability reporting policy
 - 📋 [SECURITY_AUDIT.md](SECURITY_AUDIT.md) - Pre-production checklist & threat model
+
+## API Endpoints
+
+### Authentication
+
+The backend supports two authentication methods:
+
+#### Traditional Email/Password Authentication
+- `POST /auth/register` - Register a new user with email, password, and optional username
+- `POST /auth/login` - Login with email and password, returns JWT token
+- `POST /auth/logout` - Logout (client-side token removal)
+- `GET /auth/status` - Check authentication status (requires JWT token)
+
+#### Wallet-Based Authentication
+- `POST /auth/challenge` - Request a signing challenge for wallet authentication
+- `POST /auth/verify` - Verify wallet signature and issue JWT token
+- Additional endpoints for email linking, recovery, and wallet management
+
+All authentication endpoints use JWT tokens for session management with bcrypt password hashing for traditional auth.
 
 Configuration & deployment
 --------------------------

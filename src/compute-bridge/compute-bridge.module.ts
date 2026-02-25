@@ -1,6 +1,10 @@
-import { Module } from "@nestjs/common";
+import { Module, OnModuleInit } from "@nestjs/common";
 import { ComputeBridgeService } from "./compute-bridge.service";
 import { ComputeBridgeController } from "./compute-bridge.controller";
+import { ProviderRouterService } from "./router/provider-router.service";
+import { ProviderHealthService } from "./router/provider-health.service";
+import { CircuitBreakerService } from "./router/circuit-breaker.service";
+import { ProviderMetricsService } from "./router/provider-metrics.service";
 
 /**
  * ComputeBridge Module
@@ -14,7 +18,36 @@ import { ComputeBridgeController } from "./compute-bridge.controller";
 @Module({
   imports: [],
   controllers: [ComputeBridgeController],
-  providers: [ComputeBridgeService],
-  exports: [ComputeBridgeService],
+  providers: [
+    ComputeBridgeService,
+    ProviderRouterService,
+    ProviderHealthService,
+    CircuitBreakerService,
+    ProviderMetricsService
+  ],
+  exports: [
+    ComputeBridgeService,
+    ProviderRouterService,
+    ProviderHealthService,
+    CircuitBreakerService,
+    ProviderMetricsService
+  ],
 })
-export class ComputeBridgeModule {}
+export class ComputeBridgeModule implements OnModuleInit {
+  constructor(
+    private readonly registry: ProviderRegistry,
+    private readonly mockProvider: MockProvider,
+  ) {}
+
+  async onModuleInit() {
+    // Register MockProvider with default config
+    await this.registry.register(
+      AIProviderType.CUSTOM,
+      this.mockProvider,
+      {
+        type: AIProviderType.CUSTOM,
+        apiKey: "mock-key",
+      },
+    );
+  }
+}

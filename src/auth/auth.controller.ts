@@ -13,6 +13,7 @@ import { WalletAuthService } from "./wallet-auth.service";
 import { EmailLinkingService } from "./email-linking.service";
 import { RecoveryService } from "./recovery.service";
 import { JwtAuthGuard } from "./jwt.guard";
+import { RegisterDto, LoginDto } from "./dto/auth.dto";
 import { LinkEmailDto } from "./dto/link-email.dto";
 import { VerifyEmailDto } from "./dto/verify-email.dto";
 import { RequestRecoveryDto } from "./dto/request-recovery.dto";
@@ -51,6 +52,7 @@ export class VerifySignatureDto {
 @Controller("auth")
 export class AuthController {
   constructor(
+    private readonly authService: AuthService,
     private readonly challengeService: ChallengeService,
     private readonly walletAuthService: WalletAuthService,
     private readonly emailLinkingService: EmailLinkingService,
@@ -96,6 +98,8 @@ export class AuthController {
       address: dto.address,
     };
   }
+
+  // Wallet Authentication Endpoints
 
   @Post("verify")
   async verifySignature(@Body() dto: VerifySignatureDto) {
