@@ -1,9 +1,10 @@
 import { Module, OnModuleInit } from "@nestjs/common";
 import { ComputeBridgeService } from "./compute-bridge.service";
 import { ComputeBridgeController } from "./compute-bridge.controller";
-import { ProviderRegistry } from "./provider.registry";
-import { MockProvider } from "./providers/mock.provider";
-import { AIProviderType } from "./provider.interface";
+import { ProviderRouterService } from "./router/provider-router.service";
+import { ProviderHealthService } from "./router/provider-health.service";
+import { CircuitBreakerService } from "./router/circuit-breaker.service";
+import { ProviderMetricsService } from "./router/provider-metrics.service";
 
 /**
  * ComputeBridge Module
@@ -18,11 +19,19 @@ import { AIProviderType } from "./provider.interface";
   imports: [],
   controllers: [ComputeBridgeController],
   providers: [
-    ProviderRegistry,
     ComputeBridgeService,
-    MockProvider,
+    ProviderRouterService,
+    ProviderHealthService,
+    CircuitBreakerService,
+    ProviderMetricsService
   ],
-  exports: [ComputeBridgeService, ProviderRegistry],
+  exports: [
+    ComputeBridgeService,
+    ProviderRouterService,
+    ProviderHealthService,
+    CircuitBreakerService,
+    ProviderMetricsService
+  ],
 })
 export class ComputeBridgeModule implements OnModuleInit {
   constructor(
