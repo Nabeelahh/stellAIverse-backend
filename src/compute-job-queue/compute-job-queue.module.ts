@@ -8,6 +8,9 @@ import { QueueHealthIndicator } from "./compute-job-healt.indicators";
 import { CacheModule } from "../cache/cache.module";
 import { RetryPolicyService } from "./retry-policy.service";
 import { DagModule } from "./dag/dag.module";
+import { JobProvenanceService } from "./services/job-provenance.service";
+import { ProvenanceController } from "./provenance.controller";
+import { ProvenanceCacheInvalidationListener } from "./listeners/provenance-cache-invalidation.listener";
 
 @Module({
   imports: [
@@ -66,7 +69,10 @@ import { DagModule } from "./dag/dag.module";
     ComputeJobProcessor,
     QueueHealthIndicator,
     RetryPolicyService,
+    JobProvenanceService,
+    ProvenanceCacheInvalidationListener,
   ],
-  exports: [QueueService, BullModule, CacheModule, DagModule],
+  controllers: [ProvenanceController],
+  exports: [QueueService, BullModule, CacheModule, DagModule, JobProvenanceService],
 })
 export class QueueModule {}
