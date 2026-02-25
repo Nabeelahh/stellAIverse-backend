@@ -15,8 +15,10 @@ import { IndexedEvent } from "./indexer/entities/indexed-event.entity";
 import { IndexerModule } from "./indexer/indexer.module";
 import { SignedPayload } from "./oracle/entities/signed-payload.entity";
 import { SubmissionNonce } from "./oracle/entities/submission-nonce.entity";
-import { AgentEvent } from "./agent/entities/agent-event.entity";
-import { ComputeResult } from "./compute/entities/compute-result.entity";
+import { AuditModule } from "./audit/audit.module";
+import { AgentEvent } from "./audit/entities/agent-event.entity";
+import { OracleSubmission } from "./audit/entities/oracle-submission.entity";
+import { ComputeResult } from "./audit/entities/compute-result.entity";
 import { ThrottlerModule } from "@nestjs/throttler";
 import { APP_GUARD } from "@nestjs/core";
 import { ThrottlerUserIpGuard } from "./common/guard/throttler.guard";
@@ -26,6 +28,7 @@ import { OracleModule } from "./oracle/oracle.module";
 import { HealthModule } from "./health/health.module";
 import { QuotaModule } from "./quota/quota.module";
 import { QuotaGuard } from "./common/guard/quota.guard";
+import { ConfigModule as ValidationConfigModule } from "./validation/config.module";
 
 @Module({
   imports: [
@@ -92,6 +95,7 @@ import { QuotaGuard } from "./common/guard/quota.guard";
     WebSocketModule,
     ObservabilityModule,
     IndexerModule,
+    AuditModule,
     OracleModule,
     HealthModule,
     QuotaModule,

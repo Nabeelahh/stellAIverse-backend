@@ -8,6 +8,9 @@ import { Logger, Inject, Optional } from "@nestjs/common";
 import { Job } from "bull";
 import { EventEmitter2 } from "@nestjs/event-emitter";
 import { ComputeJobData, JobResult, QueueService } from "./queue.service";
+import { CacheJobPlugin } from '../cache/plugins/cache-job.plugin';
+import { RetryPolicyService } from './retry-policy.service';
+import { JobProvenanceService } from './services/job-provenance.service';
 import { CacheJobPlugin } from "../cache/plugins/cache-job.plugin";
 import { RetryPolicyService } from "./retry-policy.service";
 
@@ -20,6 +23,7 @@ export class ComputeJobProcessor {
     private readonly retryPolicyService: RetryPolicyService,
     @Optional() private readonly cacheJobPlugin?: CacheJobPlugin,
     @Optional() private readonly eventEmitter?: EventEmitter2,
+    @Optional() private readonly provenanceService?: JobProvenanceService,
   ) {}
 
   @Process()
@@ -30,6 +34,20 @@ export class ComputeJobProcessor {
     this.logger.log(
       `Processing job ${job.id} (type: ${job.data.type}, attempt: ${job.attemptsMade + 1}/${maxAttempts})`,
     );
+
+    // Create provenance record at job start
+    if (this.provenanceService) {
+      try {
+        await this.provenanceService.createProvenance(
+          String(job.id),
+          job.data,
+          job.data.providerId || 'default-provider',
+          job.data.providerModel,
+        );
+      } catch (error) {
+        this.logger.warn(`Failed to create provenance record: ${error.message}`);
+      }
+    }
 
     try {
       // Check cache before execution
@@ -55,6 +73,11 @@ export class ComputeJobProcessor {
             jobType: job.data.type,
           });
 
+          // Mark provenance as completed even for cached results
+          if (this.provenanceService) {
+            await this.provenanceService.markJobCompleted(String(job.id), cachedResult.result);
+          }
+
           return {
             success: true,
             data: cachedResult.result,
@@ -68,6 +91,11 @@ export class ComputeJobProcessor {
       // Store result in cache
       if (this.cacheJobPlugin && job.data.cacheConfig?.enabled !== false) {
         await this.cacheJobPlugin.storeResult(job, result);
+      }
+
+      // Mark provenance as completed
+      if (this.provenanceService) {
+        await this.provenanceService.markJobCompleted(String(job.id), result);
       }
 
       this.logger.log(`Job ${job.id} completed successfully`);
