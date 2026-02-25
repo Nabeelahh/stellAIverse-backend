@@ -15,6 +15,8 @@ import { IndexedEvent } from "./indexer/entities/indexed-event.entity";
 import { IndexerModule } from "./indexer/indexer.module";
 import { SignedPayload } from "./oracle/entities/signed-payload.entity";
 import { SubmissionNonce } from "./oracle/entities/submission-nonce.entity";
+import { AgentEvent } from "./agent/entities/agent-event.entity";
+import { ComputeResult } from "./compute/entities/compute-result.entity";
 import { ThrottlerModule } from "@nestjs/throttler";
 import { APP_GUARD } from "@nestjs/core";
 import { ThrottlerUserIpGuard } from "./common/guard/throttler.guard";
@@ -36,7 +38,14 @@ import { QuotaGuard } from "./common/guard/quota.guard";
       url:
         process.env.DATABASE_URL ||
         "postgresql://stellaiverse:password@localhost:5432/stellaiverse",
-      entities: [User, EmailVerification, SignedPayload, SubmissionNonce],
+      entities: [
+        User,
+        EmailVerification,
+        SignedPayload,
+        SubmissionNonce,
+        AgentEvent,
+        ComputeResult,
+      ],
       synchronize: process.env.NODE_ENV !== "production", // Auto-sync in development
       logging: process.env.NODE_ENV === "development",
     }),
@@ -59,7 +68,7 @@ import { QuotaGuard } from "./common/guard/quota.guard";
         return {
           type: "postgres",
           url: configService.get("DATABASE_URL"),
-          entities: [User, EmailVerification],
+          entities: [User, EmailVerification, AgentEvent, ComputeResult],
           synchronize: false, // NEVER use synchronize in production
           logging:
             configService.get("NODE_ENV") === "development"
