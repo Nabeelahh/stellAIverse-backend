@@ -3,6 +3,7 @@ import { JwtModule } from "@nestjs/jwt";
 import { PassportModule } from "@nestjs/passport";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { AuthController } from "./auth.controller";
+import { AuthService } from "./auth.service";
 import { ChallengeService } from "./challenge.service";
 import { JwtStrategy } from "./jwt.strategy";
 import { JwtAuthGuard } from "./jwt.guard";
@@ -24,6 +25,7 @@ import { EmailVerification } from "./entities/email-verification.entity";
   ],
   controllers: [AuthController],
   providers: [
+    AuthService,
     ChallengeService,
     WalletAuthService,
     EmailService,
@@ -33,6 +35,7 @@ import { EmailVerification } from "./entities/email-verification.entity";
     JwtAuthGuard,
   ],
   exports: [
+    AuthService,
     ChallengeService,
     WalletAuthService,
     EmailLinkingService,

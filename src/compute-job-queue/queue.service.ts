@@ -15,6 +15,8 @@ export interface ComputeJobData {
   metadata?: Record<string, any>;
   cacheConfig?: CacheConfigDto;
   providerId?: string;
+  parentJobIds?: string[];
+  providerModel?: string;
 }
 
 export interface JobResult {
@@ -663,15 +665,23 @@ export class QueueService {
   }
 
   private normalizeJobData(data: ComputeJobData): ComputeJobData {
-    if (!data.groupKey) {
-      return data;
-    }
-    return {
+    const normalized = {
       ...data,
       metadata: {
         ...data.metadata,
         groupKey: data.groupKey,
+        parentJobIds: data.parentJobIds,
       },
     };
+
+    // Remove undefined fields to keep metadata clean
+    if (!data.groupKey) {
+      delete normalized.metadata!.groupKey;
+    }
+    if (!data.parentJobIds || data.parentJobIds.length === 0) {
+      delete normalized.metadata!.parentJobIds;
+    }
+
+    return normalized;
   }
 }
