@@ -7,7 +7,7 @@ import {
   UseGuards,
   Request,
 } from "@nestjs/common";
-import { AuthService } from "./auth.service";
+import { ApiTags, ApiOperation, ApiResponse, ApiBody, ApiBearerAuth, ApiProperty } from "@nestjs/swagger";
 import { ChallengeService } from "./challenge.service";
 import { WalletAuthService } from "./wallet-auth.service";
 import { EmailLinkingService } from "./email-linking.service";
@@ -25,14 +25,29 @@ import { Roles, Role } from "../common/decorators/roles.decorator";
 import { RolesGuard } from "../common/guard/roles.guard";
 
 export class RequestChallengeDto {
+  @ApiProperty({
+    description: "Ethereum wallet address",
+    example: "0x1234567890abcdef1234567890abcdef1234567890",
+    pattern: "^0x[a-fA-F0-9]{40}$"
+  })
   address: string;
 }
 
 export class VerifySignatureDto {
+  @ApiProperty({
+    description: "Challenge message to sign",
+    example: "Sign this message to authenticate with StellAIverse at 2024-02-25T05:30:00.000Z"
+  })
   message: string;
+
+  @ApiProperty({
+    description: "ECDSA signature of the challenge message",
+    example: "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef"
+  })
   signature: string;
 }
 
+@ApiTags("Authentication")
 @Throttle({ default: { ttl: 60000, limit: 10 } })
 @Controller("auth")
 export class AuthController {
@@ -44,31 +59,44 @@ export class AuthController {
     private readonly recoveryService: RecoveryService,
   ) {}
 
-  // Traditional Authentication Endpoints
-
-  @Post("register")
-  async register(@Body() registerDto: RegisterDto) {
-    return this.authService.register(registerDto);
-  }
-
-  @Post("login")
-  async login(@Body() loginDto: LoginDto) {
-    return this.authService.login(loginDto);
-  }
-
-  @UseGuards(JwtAuthGuard)
-  @Post("logout")
-  async logout() {
-    // For JWT, logout is handled client-side by removing the token
-    // In a production app, you might want to implement token blacklisting
-    return { message: "Logged out successfully" };
-  }
-
-  @UseGuards(JwtAuthGuard)
-  @Get("status")
-  async getAuthStatus(@Request() req) {
-    const user = req.user;
-    return this.authService.getAuthStatus(user);
+  @Post("challenge")
+  @ApiOperation({ 
+    summary: "Request Authentication Challenge", 
+    description: "Request a challenge message to sign for wallet authentication",
+    operationId: "requestChallenge"
+  })
+  @ApiBody({ type: RequestChallengeDto })
+  @ApiResponse({ 
+    status: 200, 
+    description: "Challenge issued successfully",
+    schema: {
+      type: "object",
+      properties: {
+        message: { 
+          type: "string", 
+          example: "Sign this message to authenticate with StellAIverse at 2024-02-25T05:30:00.000Z" 
+        },
+        address: { 
+          type: "string", 
+          example: "0x1234567890abcdef1234567890abcdef1234567890" 
+        }
+      }
+    }
+  })
+  @ApiResponse({ 
+    status: 400, 
+    description: "Invalid wallet address format" 
+  })
+  @ApiResponse({ 
+    status: 429, 
+    description: "Too many requests" 
+  })
+  requestChallenge(@Body() dto: RequestChallengeDto) {
+    const message = this.challengeService.issueChallengeForAddress(dto.address);
+    return {
+      message,
+      address: dto.address,
+    };
   }
 
   // Wallet Authentication Endpoints

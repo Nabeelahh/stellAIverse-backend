@@ -15,6 +15,10 @@ import { IndexedEvent } from "./indexer/entities/indexed-event.entity";
 import { IndexerModule } from "./indexer/indexer.module";
 import { SignedPayload } from "./oracle/entities/signed-payload.entity";
 import { SubmissionNonce } from "./oracle/entities/submission-nonce.entity";
+import { AuditModule } from "./audit/audit.module";
+import { AgentEvent } from "./audit/entities/agent-event.entity";
+import { OracleSubmission } from "./audit/entities/oracle-submission.entity";
+import { ComputeResult } from "./audit/entities/compute-result.entity";
 import { ThrottlerModule } from "@nestjs/throttler";
 import { APP_GUARD } from "@nestjs/core";
 import { ThrottlerUserIpGuard } from "./common/guard/throttler.guard";
@@ -24,22 +28,11 @@ import { OracleModule } from "./oracle/oracle.module";
 import { HealthModule } from "./health/health.module";
 import { QuotaModule } from "./quota/quota.module";
 import { QuotaGuard } from "./common/guard/quota.guard";
+import { ConfigModule as ValidationConfigModule } from "./validation/config.module";
 
 @Module({
   imports: [
-    ConfigModule.forRoot({
-      isGlobal: true,
-      envFilePath: ".env",
-    }),
-    TypeOrmModule.forRoot({
-      type: "postgres",
-      url:
-        process.env.DATABASE_URL ||
-        "postgresql://stellaiverse:password@localhost:5432/stellaiverse",
-      entities: [User, EmailVerification, SignedPayload, SubmissionNonce],
-      synchronize: process.env.NODE_ENV !== "production", // Auto-sync in development
-      logging: process.env.NODE_ENV === "development",
-    }),
+    ValidationConfigModule,
     // Rate Limiting - Global protection against brute force and DoS
     ThrottlerModule.forRoot({
       throttlers: [
@@ -58,13 +51,10 @@ import { QuotaGuard } from "./common/guard/quota.guard";
 
         return {
           type: "postgres",
-          url: configService.get("DATABASE_URL"),
-          entities: [User, EmailVerification],
-          synchronize: false, // NEVER use synchronize in production
-          logging:
-            configService.get("NODE_ENV") === "development"
-              ? ["error", "warn", "schema"]
-              : ["error"],
+          url: configService.get("DATABASE_URL") || "postgresql://stellaiverse:password@localhost:5432/stellaiverse",
+          entities: [User, EmailVerification, SignedPayload, SubmissionNonce, AgentEvent, OracleSubmission, ComputeResult],
+          synchronize: !isProduction, // Auto-sync in development only
+          logging: configService.get("NODE_ENV") === "development",
           ssl: isProduction ? { rejectUnauthorized: false } : false,
           extra: {
             max: 20, // Maximum pool size
@@ -83,6 +73,7 @@ import { QuotaGuard } from "./common/guard/quota.guard";
     WebSocketModule,
     ObservabilityModule,
     IndexerModule,
+    AuditModule,
     OracleModule,
     HealthModule,
     QuotaModule,
